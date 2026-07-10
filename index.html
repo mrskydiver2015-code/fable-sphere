@@ -723,7 +723,7 @@ function renderContent(){
    viewport. Custom physics: pointer drag → velocity samples → momentum projection
    → critically-damped spring that always lands exactly on a column boundary.   */
 const sphere={raf:0,pos:0,vel:0,idx:0,target:0,stride:1,maxIdx:0,N:0,t:0,cw:0,rh:0,g:8,lastResize:"—",
-              wrap:null,belt:null,ind:null,ro:null,drag:null,swallow:false,wheelT:0,entries:[]};
+              wrap:null,belt:null,ind:null,ro:null,drag:null,swallow:false,swallowT:0,lastTap:null,wheelT:0,entries:[]};
 /* Cylinder feel constants — adjustable from the QA panel */
 const TUNE={proj:300, k:0.0002, sens:1.0, rubber:0.3, curve:32, depth:130};
 
@@ -731,6 +731,7 @@ function sphereStop(){
   if(sphere.raf) cancelAnimationFrame(sphere.raf);
   if(sphere.ro) sphere.ro.disconnect();
   clearTimeout(sphere.wheelT);
+  clearTimeout(sphere.swallowT);
   sphere.raf=0; sphere.ro=null; sphere.wrap=null; sphere.belt=null; sphere.ind=null; sphere.drag=null;
 }
 
@@ -834,12 +835,22 @@ function bindSphere(){
   w.addEventListener("pointerdown",e=>{
     if(e.button!==0) return;
     cancelAnimationFrame(sphere.raf); sphere.raf=0;
-    sphere.drag={x:e.clientX,moved:0,pid:e.pointerId,captured:false,samples:[[performance.now(),e.clientX]]};
+    const hit=document.elementFromPoint(e.clientX,e.clientY);
+    let entry=hit&&hit.closest?hit.closest("[data-kind]"):null;
+    if(!entry){
+      entry=[...sphere.belt.querySelectorAll("[data-kind]")].find(n=>{
+        if(getComputedStyle(n).pointerEvents==="none") return false;
+        const r=n.getBoundingClientRect();
+        return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+      })||null;
+    }
+    sphere.drag={x:e.clientX,startX:e.clientX,moved:0,pid:e.pointerId,captured:false,entry,
+      samples:[[performance.now(),e.clientX]]};
     w.classList.add("dragging");
   });
   w.addEventListener("pointermove",e=>{
     const d=sphere.drag; if(!d) return;
-    const dx=e.clientX-d.x; d.x=e.clientX; d.moved+=Math.abs(dx);
+    const dx=e.clientX-d.x; d.x=e.clientX; d.moved=Math.max(d.moved,Math.abs(e.clientX-d.startX));
     if(!d.captured && d.moved>6){ try{w.setPointerCapture(d.pid);}catch(err){} d.captured=true; }
     const max=sphere.maxIdx*sphere.stride;
     const out=(sphere.pos<0||sphere.pos>max)?TUNE.rubber:1;   /* rubber band at edges */
@@ -850,10 +861,23 @@ function bindSphere(){
     while(d.samples.length>2 && now-d.samples[0][0]>90) d.samples.shift();
     sphereApply();
   });
-  const up=()=>{
+  const up=e=>{
     const d=sphere.drag; if(!d) return;
     sphere.drag=null; w.classList.remove("dragging");
-    if(d.moved>6) sphere.swallow=true;
+    if(d.moved>6){
+      sphere.swallow=true;
+      clearTimeout(sphere.swallowT);
+      sphere.swallowT=setTimeout(()=>{sphere.swallow=false;},0);
+    } else if(d.entry && !(e.target.closest&&e.target.closest("[data-kind]"))){
+      const kind=d.entry.dataset.kind,id=d.entry.dataset.id,now=performance.now();
+      const twice=sphere.lastTap&&sphere.lastTap.id===id&&now-sphere.lastTap.time<350;
+      sphere.lastTap={id,time:now};
+      sphere.swallow=true;
+      clearTimeout(sphere.swallowT);
+      sphere.swallowT=setTimeout(()=>{sphere.swallow=false;},0);
+      select(kind,id);
+      if(twice) openEntry(kind,id);
+    }
     let v=0; const s=d.samples;
     if(s.length>1){ const [t0,x0]=s[0],[t1,x1]=s[s.length-1]; if(t1>t0) v=(x1-x0)/(t1-t0); }
     sphere.vel=-v;
