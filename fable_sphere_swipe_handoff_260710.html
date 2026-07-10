@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fable Sphere — Local Workspace</title>
+<style>
+:root{
+  --bg1:#dce9f9; --bg2:#f2f7fd; --bg3:#cfe0f5;
+  --glass:rgba(255,255,255,.62); --glass-strong:rgba(255,255,255,.8);
+  --stroke:rgba(255,255,255,.75); --stroke-soft:rgba(120,150,190,.22);
+  --ink:#182a44; --ink-2:#4a6285; --ink-3:#7e93b3;
+  --accent:#2f7bff; --accent-soft:rgba(47,123,255,.12);
+  --ok:#22a06b; --danger:#d64545;
+  --radius:16px; --radius-sm:10px;
+  --shadow:0 10px 30px rgba(60,100,160,.14), 0 2px 6px rgba(60,100,160,.08);
+  --shadow-sm:0 4px 14px rgba(60,100,160,.12);
+  --nav-w:236px; --insp-w:312px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.9), transparent 60%),
+    radial-gradient(900px 500px at 85% 110%, rgba(150,190,255,.35), transparent 60%),
+    linear-gradient(160deg,var(--bg1),var(--bg2) 45%,var(--bg3));
+  display:grid;
+  grid-template-columns:var(--nav-w) minmax(0,1fr) var(--insp-w);
+  gap:12px; padding:12px; overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.panel{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--stroke);border-radius:var(--radius);box-shadow:var(--shadow)}
+svg.ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---------- LEFT NAV ---------- */
+#nav{display:flex;flex-direction:column;overflow:hidden}
+.brand{display:flex;align-items:center;gap:10px;padding:16px 14px 12px}
+.brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2f7bff,#7c3aed);
+  display:grid;place-items:center;color:#fff;box-shadow:var(--shadow-sm)}
+.brand b{font-size:14px;letter-spacing:.2px}
+.brand small{display:block;font-size:9.5px;color:var(--ink-3);letter-spacing:1.4px;text-transform:uppercase}
+.navlist{flex:1;overflow-y:auto;padding:4px 8px 8px}
+.navitem{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--radius-sm);
+  font-size:12.5px;color:var(--ink-2);cursor:pointer;border:1px solid transparent;user-select:none}
+.navitem:hover{background:rgba(255,255,255,.6)}
+.navitem.active{background:var(--glass-strong);border-color:var(--stroke);color:var(--ink);
+  box-shadow:var(--shadow-sm);font-weight:600}
+.navitem .swatch{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;color:#fff;flex:none}
+.navitem .swatch svg.ic{width:12px;height:12px}
+.navitem .cnt{margin-left:auto;font-size:10.5px;color:var(--ink-3);background:rgba(255,255,255,.65);
+  border:1px solid var(--stroke-soft);border-radius:999px;padding:1px 7px;font-variant-numeric:tabular-nums}
+.navfoot{padding:10px 12px;border-top:1px solid var(--stroke-soft)}
+.storage{font-size:10.5px;color:var(--ink-2);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(34,160,107,.15)}
+.bar{height:5px;border-radius:99px;background:rgba(120,150,190,.2);overflow:hidden;margin:4px 0 8px}
+.bar i{display:block;height:100%;width:25%;background:linear-gradient(90deg,#f6a13c,#f97316);border-radius:99px}
+.resetlink{font-size:10px;color:var(--ink-3);cursor:pointer;text-decoration:underline;background:none;border:0;font-family:inherit}
+.resetlink:hover{color:var(--ink-2)}
+
+/* ---------- CENTER ---------- */
+#center{display:flex;flex-direction:column;min-width:0;gap:10px;overflow:hidden}
+.topbar{display:flex;gap:10px;align-items:center}
+.search{flex:1;display:flex;align-items:center;gap:9px;padding:0 14px;height:42px}
+.search input{flex:1;border:0;outline:0;background:transparent;font:inherit;font-size:13px;color:var(--ink)}
+.search input::placeholder{color:var(--ink-3)}
+.search .kbd{font-size:10px;color:var(--ink-3);border:1px solid var(--stroke-soft);border-radius:5px;padding:1px 5px;background:rgba(255,255,255,.5)}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--stroke);border-radius:12px;
+  padding:0 14px;height:42px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+  background:var(--glass);color:var(--ink);box-shadow:var(--shadow-sm);white-space:nowrap}
+.btn:hover{background:var(--glass-strong)}
+.btn.primary{background:linear-gradient(135deg,#ff9a3c,#f97316);color:#fff;border-color:rgba(255,255,255,.5)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.danger{color:var(--danger)}
+.btn.sm{height:32px;padding:0 11px;border-radius:9px;font-size:11.5px}
+.chipsrow{display:flex;gap:7px;overflow-x:auto;padding:2px;scrollbar-width:none;flex:none}
+.chipsrow::-webkit-scrollbar{display:none}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:11px;font-size:11.5px;
+  font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap;user-select:none;
+  background:var(--glass);border:1px solid var(--stroke);box-shadow:var(--shadow-sm)}
+.chip:hover{background:var(--glass-strong)}
+.chip.active{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+.chip .swatch{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;color:#fff}
+.chip .swatch svg.ic{width:10px;height:10px}
+.chip small{color:var(--ink-3);font-weight:500}
+.crumbrow{display:flex;align-items:center;gap:9px;flex:none;min-height:30px}
+.crumbrow.hidden{display:none}
+.crumbs{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-3)}
+.crumbs a{color:var(--ink-2);cursor:pointer;font-weight:600;text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.crumbs .cur{color:var(--ink);font-weight:700}
+#content{flex:1;overflow-y:auto;min-height:0;padding:2px 2px 8px;scroll-behavior:auto}
+.bottombar{margin-top:2px}
+#content:focus{outline:none}
+
+/* Flat grid */
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:1500px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1200px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Root flat view: compact cards, FLEXIBLE column count (6/7/8… depending on space).
+   The exact 6x4 resting window is a Sphere/Cylinder Mode rule, not a Flat rule. */
+.grid.root{grid-template-columns:repeat(auto-fill,minmax(158px,1fr));grid-auto-rows:minmax(118px,1fr);gap:8px}
+.grid.root .card{border-radius:11px}
+.grid.root .card .head{padding:5px 7px;gap:5px}
+.grid.root .card .head b{font-size:10.5px}
+.grid.root .card .head .swatch{width:17px;height:17px;border-radius:5px}
+.grid.root .card .head .swatch svg.ic{width:9px;height:9px}
+.grid.root .card .head .cnt{font-size:8.5px;padding:0 5px}
+.grid.root .card .thumb{flex:1;height:auto;min-height:24px;margin:0 6px;border-radius:7px}
+.grid.root .card .thumb svg.ic{width:17px;height:17px}
+.grid.root .card .rows{padding:4px 7px 1px;gap:2px}
+.grid.root .card .rows .r{font-size:9px;padding:2px 6px;border-radius:5px;gap:5px}
+.grid.root .card .rows .r svg.ic{width:9px;height:9px}
+.grid.root .card .rows .r:nth-child(n+3){display:none}
+.grid.root .card .foot{padding:3px 7px 6px;font-size:9px;margin-top:0}
+@media (max-width:1400px){body{--nav-w:200px;--insp-w:272px}}
+.card{background:var(--glass);border:1px solid var(--stroke);border-radius:14px;box-shadow:var(--shadow-sm);
+  overflow:hidden;cursor:pointer;user-select:none;display:flex;flex-direction:column;
+  transition:transform .08s ease,box-shadow .08s ease,border-color .08s ease}
+.card:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.card:active{transform:scale(.985)}
+.card.selected{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow)}
+.card .head{display:flex;align-items:center;gap:8px;padding:9px 11px}
+.card .head .swatch{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:#fff;flex:none}
+.card .head .swatch svg.ic{width:13px;height:13px}
+.card .head b{font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .head .cnt{font-size:10px;color:var(--ink-3);background:rgba(255,255,255,.7);border:1px solid var(--stroke-soft);
+  border-radius:999px;padding:1px 7px;font-weight:600;font-variant-numeric:tabular-nums;flex:none}
+.card .thumb{height:62px;margin:0 9px;border-radius:9px;display:grid;place-items:center;color:rgba(255,255,255,.9);
+  position:relative;overflow:hidden;flex:none}
+.card .thumb svg.ic{width:26px;height:26px;stroke-width:1.5;filter:drop-shadow(0 2px 4px rgba(0,0,40,.25))}
+.card .thumb::after{content:"";position:absolute;inset:0;background:
+  radial-gradient(120px 50px at 20% 0%,rgba(255,255,255,.35),transparent 60%),
+  radial-gradient(140px 70px at 90% 110%,rgba(255,255,255,.22),transparent 60%)}
+.card .rows{padding:8px 11px 4px;display:flex;flex-direction:column;gap:4px}
+.card .rows .r{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-2);
+  background:rgba(255,255,255,.5);border:1px solid var(--stroke-soft);border-radius:7px;padding:4px 8px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .rows .r svg.ic{width:11px;height:11px;color:var(--ink-3)}
+.card .rows .r span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .foot{display:flex;align-items:center;justify-content:space-between;padding:7px 11px 10px;
+  font-size:11px;color:var(--ink-3);margin-top:auto}
+.card .foot .go{color:var(--accent);font-weight:600}
+/* item card variant */
+.card.item .thumb{height:84px;margin-top:0}
+.card.item .meta{padding:9px 11px 11px}
+.card.item .meta b{display:block;font-size:12.5px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card.item .meta .sub{font-size:10.5px;color:var(--ink-3);display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.tag{font-size:9.5px;color:var(--ink-2);background:rgba(255,255,255,.65);border:1px solid var(--stroke-soft);
+  border-radius:999px;padding:1px 7px;font-weight:600}
+
+/* Detail list */
+.table{background:var(--glass);border:1px solid var(--stroke);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden}
+.trow{display:grid;grid-template-columns:minmax(200px,2.2fr) 1fr 1.2fr .9fr .6fr;gap:10px;align-items:center;
+  padding:9px 14px;font-size:12px;color:var(--ink-2);cursor:pointer;user-select:none;
+  border-bottom:1px solid var(--stroke-soft)}
+.trow:last-child{border-bottom:0}
+.trow:hover{background:rgba(255,255,255,.55)}
+.trow.selected{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.trow.thead{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-3);font-weight:700;
+  cursor:default;background:rgba(255,255,255,.45)}
+.trow.thead span[data-sort]{cursor:pointer}
+.trow.thead span[data-sort]:hover{color:var(--ink)}
+.trow .name{display:flex;align-items:center;gap:9px;color:var(--ink);font-weight:600;min-width:0}
+.trow .name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .name .swatch{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:#fff;flex:none}
+.trow .name .swatch svg.ic{width:12px;height:12px}
+.trow .tags{display:flex;gap:4px;overflow:hidden}
+.trow .mod{font-variant-numeric:tabular-nums;white-space:nowrap}
+.trow .cnt2{text-align:right;font-variant-numeric:tabular-nums}
+
+.empty{padding:60px 20px;text-align:center;color:var(--ink-3);font-size:13px}
+.empty b{display:block;color:var(--ink-2);font-size:14px;margin-bottom:4px}
+
+/* ---------- Sphere / Cylinder Mode ---------- */
+.sphere-wrap{position:relative;height:100%;overflow:hidden;touch-action:none;user-select:none;cursor:grab;
+  perspective:1100px;perspective-origin:50% 45%}
+/* SWIPE room: the curve lives in Column 1 (nav), Column 2 (matrix) and Column 3
+   (inspector). All control rows (search/upload/new, back+chips, bottom bar) are
+   STRAIGHT, stable and fully usable. */
+body.swipe{perspective:1500px;perspective-origin:50% 45%}
+body.swipe #nav,body.swipe #inspector{transition:transform .25s ease;will-change:transform}
+body.swipe #nav{transform:rotateY(26deg);transform-origin:0% 50%}
+body.swipe #inspector{transform:rotateY(-26deg);transform-origin:100% 50%}
+.crumbrow{display:none!important}
+.sphere-wrap::before,.sphere-wrap::after{content:"";position:absolute;top:0;bottom:14px;width:7%;z-index:5;pointer-events:none}
+.sphere-wrap::before{left:0;background:linear-gradient(90deg,rgba(206,222,244,.32),transparent)}
+.sphere-wrap::after{right:0;background:linear-gradient(270deg,rgba(206,222,244,.32),transparent)}
+.sphere-wrap.dragging{cursor:grabbing}
+.sphere-belt{display:grid;grid-auto-flow:column;height:calc(100% - 14px);padding:2px 0;width:max-content;will-change:transform;transform-style:preserve-3d}
+.sphere-belt .card{border-radius:11px;transition:box-shadow .08s ease,border-color .08s ease;backface-visibility:hidden}
+.sphere-belt .card:hover,.sphere-belt .card:active{transform:none}
+.sphere-belt .card .head{padding:5px 7px;gap:5px}
+.sphere-belt .card .head b{font-size:10.5px}
+.sphere-belt .card .head .swatch{width:17px;height:17px;border-radius:5px}
+.sphere-belt .card .head .swatch svg.ic{width:9px;height:9px}
+.sphere-belt .card .head .cnt{font-size:8.5px;padding:0 5px}
+.sphere-belt .card .thumb{flex:1;height:auto;min-height:22px;margin:0 6px;border-radius:7px}
+.sphere-belt .card .thumb svg.ic{width:17px;height:17px}
+.sphere-belt .card .rows{padding:4px 7px 1px;gap:2px}
+.sphere-belt .card .rows .r{font-size:9px;padding:2px 6px;border-radius:5px;gap:5px}
+.sphere-belt .card .rows .r svg.ic{width:9px;height:9px}
+.sphere-belt .card .rows .r:nth-child(n+3){display:none}
+.sphere-belt .card .foot{padding:3px 7px 6px;font-size:9px;margin-top:0}
+.sphere-belt .card.item .meta{padding:5px 7px 7px}
+.sphere-belt .card.item .meta b{font-size:10.5px;margin-bottom:1px}
+.sphere-belt .card.item .meta .sub{font-size:9px}
+.sphere-ind{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);height:5px;width:140px;
+  border-radius:99px;background:rgba(120,150,190,.22);overflow:hidden}
+.sphere-ind i{position:absolute;top:0;bottom:0;left:0;border-radius:99px;background:var(--accent)}
+.sphere-ind.pulse i{background:#1d5fd6;box-shadow:0 0 0 3px var(--accent-soft)}
+/* ---------- Sphere QA / debug panel (dev only) ---------- */
+#qa{position:fixed;left:14px;bottom:64px;z-index:40;width:238px;background:rgba(18,30,52,.9);color:#cfe0f5;
+  font:10.5px/1.55 ui-monospace,Menlo,Consolas,monospace;border-radius:10px;padding:8px 10px;
+  box-shadow:var(--shadow);display:none;backdrop-filter:blur(8px)}
+#qa.show{display:block}
+#qa.min .qbody{display:none}
+#qa h4{font-size:10px;letter-spacing:.8px;color:#8fb2e8;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+#qa h4 button{background:none;border:0;color:#8fb2e8;cursor:pointer;font:inherit;padding:0 3px}
+#qa table{width:100%;border-collapse:collapse}
+#qa td{padding:0;color:#9db8dd}
+#qa td:last-child{text-align:right;color:#fff;font-variant-numeric:tabular-nums}
+#qa td .ok{color:#7de3a8}#qa td .bad{color:#ff9a9a}
+#qa .qtune{margin-top:6px;border-top:1px solid rgba(255,255,255,.14);padding-top:6px}
+#qa .qtune label{display:flex;justify-content:space-between;gap:6px;align-items:center;color:#9db8dd}
+#qa input[type=range]{width:104px;accent-color:#5b9dff}
+#qa .qrun{margin-top:7px;width:100%;background:#2f7bff;border:0;border-radius:7px;color:#fff;font:inherit;padding:5px;cursor:pointer}
+#qa .qrun:disabled{opacity:.5}
+#qa .qres{margin-top:5px;white-space:pre-wrap;color:#9fe3b8;max-height:120px;overflow-y:auto}
+
+/* Bottom bar */
+.bottombar{flex:none;display:flex;align-items:center;justify-content:center;gap:12px;padding:2px 0 0}
+.statpill{display:flex;align-items:center;gap:14px;padding:9px 18px;font-size:11px;font-weight:700;
+  letter-spacing:.5px;color:var(--ink-2);border-radius:999px}
+.statpill .ok{color:var(--ok)}
+.viewtoggle{display:flex;gap:4px;padding:4px;border-radius:999px}
+.viewtoggle button{border:0;background:transparent;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.6px;
+  color:var(--ink-2);padding:7px 16px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.viewtoggle button.active{background:linear-gradient(135deg,#2f7bff,#5b9dff);color:#fff;box-shadow:var(--shadow-sm)}
+.viewtoggle button:disabled{opacity:.45;cursor:not-allowed}
+.viewtoggle button:not(.active):not(:disabled):hover{background:rgba(255,255,255,.6)}
+
+/* ---------- INSPECTOR ---------- */
+#inspector{display:flex;flex-direction:column;overflow:hidden}
+#inspector .body{flex:1;overflow-y:auto;padding:16px 14px}
+.insp-title{display:flex;align-items:flex-start;gap:10px;margin-bottom:4px}
+.insp-title h2{font-size:17px;flex:1;line-height:1.25;word-break:break-word}
+.insp-sub{font-size:11px;color:var(--ink-3);margin-bottom:12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.insp-thumb{height:130px;border-radius:12px;display:grid;place-items:center;color:rgba(255,255,255,.92);
+  position:relative;overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow-sm)}
+.insp-thumb svg.ic{width:42px;height:42px;stroke-width:1.3;filter:drop-shadow(0 3px 6px rgba(0,0,40,.3))}
+.insp-thumb::after{content:"";position:absolute;inset:0;background:
+  radial-gradient(200px 80px at 15% 0%,rgba(255,255,255,.4),transparent 60%),
+  radial-gradient(220px 110px at 95% 115%,rgba(255,255,255,.25),transparent 55%)}
+.insp-desc{font-size:12px;color:var(--ink-2);line-height:1.55;margin-bottom:12px}
+.insp-sync{display:flex;gap:9px;align-items:center;background:rgba(255,255,255,.55);border:1px solid var(--stroke-soft);
+  border-radius:11px;padding:10px 12px;margin-bottom:14px}
+.insp-sync .dot{margin-top:1px}
+.insp-sync div b{font-size:11.5px;display:block}
+.insp-sync div small{font-size:10px;color:var(--ink-3)}
+.insp-h{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:14px 0 8px}
+.insp-recent{display:flex;flex-direction:column;gap:6px}
+.insp-recent .ri{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.55);border:1px solid var(--stroke-soft);
+  border-radius:10px;padding:8px 10px;cursor:pointer}
+.insp-recent .ri:hover{background:rgba(255,255,255,.8)}
+.insp-recent .ri .swatch{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:#fff;flex:none}
+.insp-recent .ri .swatch svg.ic{width:13px;height:13px}
+.insp-recent .ri b{font-size:11.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.insp-recent .ri small{font-size:10px;color:var(--ink-3)}
+.insp-recent .ri div{min-width:0;flex:1}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:11.5px;margin-bottom:6px}
+.kv dt{color:var(--ink-3)}
+.kv dd{color:var(--ink);font-weight:600;text-align:right}
+.insp-actions{padding:12px 14px;border-top:1px solid var(--stroke-soft);display:flex;flex-direction:column;gap:8px}
+.insp-actions .row2{display:flex;gap:8px}
+.insp-actions .row2 .btn{flex:1;justify-content:center;height:36px}
+.btn.open-w{width:100%;justify-content:center;background:linear-gradient(135deg,#2f7bff,#5b9dff);color:#fff;border-color:rgba(255,255,255,.5)}
+.insp-empty{flex:1;display:grid;place-items:center;padding:30px;text-align:center;color:var(--ink-3);font-size:12.5px;line-height:1.6}
+
+/* ---------- Modal & toast ---------- */
+#modal-root{position:fixed;inset:0;display:none;place-items:center;background:rgba(30,50,90,.25);
+  backdrop-filter:blur(4px);z-index:50}
+#modal-root.show{display:grid}
+.modal{width:min(420px,92vw);background:var(--glass-strong);backdrop-filter:blur(24px);
+  border:1px solid var(--stroke);border-radius:18px;box-shadow:var(--shadow);padding:20px}
+.modal h3{font-size:15px;margin-bottom:6px}
+.modal p{font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-bottom:14px}
+.modal label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--ink-3);margin:10px 0 5px}
+.modal input,.modal select,.modal textarea{width:100%;font:inherit;font-size:13px;color:var(--ink);
+  background:rgba(255,255,255,.75);border:1px solid var(--stroke-soft);border-radius:10px;padding:9px 11px;outline:none}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.modal textarea{resize:vertical;min-height:60px}
+.modal .mrow{display:flex;gap:9px;justify-content:flex-end;margin-top:18px}
+.modal .btn{height:36px}
+.modal .btn.confirm-danger{background:linear-gradient(135deg,#e05b5b,#d64545);color:#fff;border-color:rgba(255,255,255,.5)}
+#toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%) translateY(20px);opacity:0;
+  background:rgba(24,42,68,.92);color:#fff;font-size:12px;font-weight:600;padding:9px 16px;border-radius:999px;
+  pointer-events:none;transition:opacity .15s,transform .15s;z-index:60;box-shadow:var(--shadow)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,150,190,.35);border-radius:99px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:1080px){
+  body{grid-template-columns:var(--nav-w) minmax(0,1fr)}
+  #inspector{display:none}
+}
+@media (max-width:820px){
+  body{grid-template-columns:minmax(0,1fr)}
+  #nav{display:none}
+}
+</style>
+</head>
+<body>
+
+<aside id="nav" class="panel">
+  <div class="brand">
+    <div class="logo" id="brandLogo"></div>
+    <div><b>Fable Sphere</b><small>Local workspace</small></div>
+  </div>
+  <div class="navlist" id="navlist"></div>
+  <div class="navfoot">
+    <div class="storage"><span class="dot"></span><b>LOCAL</b>&nbsp;· F1B2S1 — all data stored locally</div>
+    <div class="storage" style="justify-content:space-between"><span id="storageLabel">128 GB of 512 GB</span><span style="color:var(--ink-3)">25% used</span></div>
+    <div class="bar"><i></i></div>
+    <button class="resetlink" id="resetBtn">Reset demo data</button>
+  </div>
+</aside>
+
+<main id="center">
+  <div class="topbar">
+    <div class="search panel" id="searchWrap">
+      <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchInput" type="text" placeholder="Search your local workspace…" autocomplete="off">
+      <span class="kbd">/</span>
+    </div>
+    <button class="btn" id="uploadBtn">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>Upload
+    </button>
+    <input type="file" id="fileInput" multiple hidden>
+    <button class="btn primary" id="newBtn">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span id="newBtnLabel">New</span>
+    </button>
+  </div>
+
+  <div class="chipsrow" id="chips"></div>
+
+  <div class="crumbrow hidden" id="crumbrow">
+    <button class="btn sm" id="backBtn">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> Back
+    </button>
+    <div class="crumbs" id="crumbs"></div>
+  </div>
+
+  <div id="content" tabindex="0"></div>
+
+  <div class="bottombar">
+    <div class="statpill panel" id="statpill"></div>
+    <div class="viewtoggle panel">
+      <button id="btnSphere" title="Swipe left/right through the cylinder wall">
+        <svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="9" ry="4"/><path d="M12 3v18"/></svg>SWIPE
+      </button>
+      <button id="btnFlat">FLAT</button>
+      <button id="btnDetail">DETAIL</button>
+    </div>
+    <button class="btn sm" id="qaToggle" title="Sphere QA / debug panel" style="display:none">QA</button>
+  </div>
+</main>
+
+<aside id="inspector" class="panel"></aside>
+
+<div id="qa">
+  <h4><span>SWIPE QA (cylinder)</span><span><button id="qaMin" title="Minimize">−</button><button id="qaClose" title="Close">✕</button></span></h4>
+  <div class="qbody">
+    <table id="qaTable"></table>
+    <div class="qtune">
+      <label>proj <input type="range" id="tProj" min="100" max="600" step="10"><span id="vProj"></span></label>
+      <label>snap k <input type="range" id="tK" min="8" max="60" step="1"><span id="vK"></span></label>
+      <label>drag sens <input type="range" id="tSens" min="50" max="200" step="5"><span id="vSens"></span></label>
+      <label>rubber <input type="range" id="tRub" min="10" max="80" step="5"><span id="vRub"></span></label>
+      <label>curve <input type="range" id="tCurve" min="0" max="50" step="1"><span id="vCurve"></span></label>
+    </div>
+    <button class="qrun" id="qaRun">Run Cylinder QA</button>
+    <div class="qres" id="qaRes"></div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* =============================================================
+   Fable Sphere — Pass 1
+   Flat Mode + Detailed Mode + Inspector + local persistence.
+   Sphere/Cylinder mechanics intentionally NOT implemented yet;
+   the state/render split below is the seam where Pass 2 plugs in
+   (a "sphere" renderer consumes the same currentEntries() list).
+   ============================================================= */
+
+/* ---------- Icons ---------- */
+const IC = {
+  chip:'<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>',
+  scale:'<path d="M12 3v18M4 7h16M6 7l-3 6a3.5 3.5 0 007 0zM18 7l-3 6a3.5 3.5 0 007 0zM8 21h8"/>',
+  coin:'<circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10c0-1 1-1.7 2.5-1.7s2.5.7 2.5 1.7-1 1.5-2.5 1.7-2.5.7-2.5 1.7 1 1.7 2.5 1.7 2.5-.7 2.5-1.7"/>',
+  pencil:'<path d="M17 3l4 4L8 20l-5 1 1-5z"/>',
+  book:'<path d="M4 19V5a2 2 0 012-2h13v16H6a2 2 0 000 4h13"/>',
+  photo:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 3 3 4-4 4 4"/>',
+  link:'<path d="M10 14a5 5 0 007.1 0l2.4-2.4a5 5 0 00-7.1-7.1L11 5.9M14 10a5 5 0 00-7.1 0l-2.4 2.4a5 5 0 007.1 7.1L13 18.1"/>',
+  box:'<path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 5a3.5 3.5 0 010 7M21.5 20a6.5 6.5 0 00-4.5-6"/>',
+  layout:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/>',
+  flask:'<path d="M9 3h6M10 3v6l-5.5 9A2 2 0 006.2 21h11.6a2 2 0 001.7-3L14 9V3M7.5 15h9"/>',
+  bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.4 10.9c.7.6 1.4 1.6 1.4 2.6v.5h4v-.5c0-1 .7-2 1.4-2.6A6 6 0 0012 3z"/>',
+  file:'<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5M9 13h6M9 17h6"/>',
+  heart:'<path d="M12 20s-7.5-4.7-9.3-9A5 5 0 0112 6.4 5 5 0 0121.3 11c-1.8 4.3-9.3 9-9.3 9z"/>',
+  cube:'<path d="M3 8l9-5 9 5-9 5zM3 8v8l9 5M21 8v8l-9 5M12 13v8"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/>',
+  spark:'<path d="M3 20l4-9 4 5 4-11 6 15"/>',
+  trend:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
+  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
+  server:'<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+  bookopen:'<path d="M12 6c-2-1.8-5-2-9-2v15c4 0 7 .2 9 2 2-1.8 5-2 9-2V4c-4 0-7 .2-9 2zM12 6v15"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-8M4 20h17"/>',
+  gridic:'<rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/>',
+  play:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/>',
+  palette:'<path d="M12 21a9 9 0 110-18 9 9 0 018.5 6c.6 1.8-.8 3-2.5 3h-2a2 2 0 00-2 2c0 1 .8 1.6.8 2.7 0 1.3-1.1 2.3-2.8 2.3z"/><circle cx="7.5" cy="10.5" r=".9"/><circle cx="12" cy="7.5" r=".9"/><circle cx="16.5" cy="10.5" r=".9"/>',
+  folder:'<path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>'
+};
+const icon = (n,cls) => `<svg class="ic${cls?' '+cls:''}" viewBox="0 0 24 24">${IC[n]||IC.file}</svg>`;
+
+const TYPE_ICON = {
+  "Document":"file","PDF":"file","Spreadsheet":"gridic","Note":"pencil","Image":"photo","Video":"play",
+  "Link":"link","Research":"flask","Project":"cube","Moodboard":"palette","Report":"chart","Template":"layout",
+  "Client":"users","Idea":"bulb","AI Project":"chip","Archive":"box","Training":"book","Event":"cal",
+  "Finance":"coin","Legal":"scale","Collection":"folder"
+};
+const TYPE_GRAD = {
+  "Document":["#e0653a","#f59e0b"],"PDF":["#d64545","#f97316"],"Spreadsheet":["#16a34a","#4ade80"],
+  "Note":["#8b5cf6","#c4b5fd"],"Image":["#60a5fa","#818cf8"],"Video":["#0ea5e9","#38bdf8"],
+  "Link":["#f97316","#fbbf24"],"Research":["#6d28d9","#4f46e5"],"Project":["#2563eb","#06b6d4"],
+  "Moodboard":["#ec4899","#f472b6"],"Report":["#1d4ed8","#60a5fa"],"Template":["#64748b","#94a3b8"],
+  "Client":["#1e40af","#3b82f6"],"Idea":["#0891b2","#22d3ee"],"AI Project":["#3b82f6","#8b5cf6"],
+  "Archive":["#b45309","#d97706"],"Training":["#06b6d4","#3b82f6"],"Event":["#7c3aed","#a78bfa"]
+};
+const grad = (a,b)=>`background:linear-gradient(135deg,${a},${b})`;
+
+/* ---------- Collections ---------- */
+const COLS = [
+ ["ai","AI Projects","chip","#3b82f6","#8b5cf6","AI tools, assistants and generation projects built locally."],
+ ["legal","Legal","scale","#10b981","#0ea5e9","Contracts, agreements and case material."],
+ ["finance","Finance","coin","#f59e0b","#fb923c","Financial documents and reports for personal and business management."],
+ ["notes","Notes","pencil","#8b5cf6","#a78bfa","Daily notes, ideas and quick captures."],
+ ["training","Training","book","#06b6d4","#3b82f6","Courses, tutorials and certifications."],
+ ["images","Images","photo","#60a5fa","#818cf8","Visual references, boards and image assets."],
+ ["links","Links","link","#f97316","#f59e0b","Bookmarks, resources and reference URLs."],
+ ["archive","Archive","box","#b45309","#d97706","Completed and retired material kept for reference."],
+ ["clients","Clients","users","#1d4ed8","#3b82f6","Client profiles, communication and project briefs."],
+ ["templates","Templates","layout","#64748b","#94a3b8","Reusable documents, decks and checklists."],
+ ["research","Research","flask","#6d28d9","#4f46e5","Studies, papers, insights and test results."],
+ ["ideas","Ideas","bulb","#0891b2","#22d3ee","Brainstorms, concepts and prototypes."],
+ ["documents","Documents","file","#c2410c","#f59e0b","Reports, manuals and long-form documents."],
+ ["personal","Personal","heart","#ec4899","#f472b6","Journals, checklists and personal goals."],
+ ["products","Products","cube","#2563eb","#06b6d4","Roadmaps, features and release planning."],
+ ["compliance","Compliance","shield","#059669","#34d399","Policies, audit logs and regulations."],
+ ["marketing","Marketing","spark","#16a34a","#4ade80","Campaigns, analytics and marketing assets."],
+ ["sales","Sales","trend","#1d4ed8","#60a5fa","Leads, deals and forecasts."],
+ ["hr","HR","users","#9a3412","#f59e0b","Employee material, onboarding and role docs."],
+ ["operations","Operations","gear","#d97706","#fbbf24","Processes, workflows and SOPs."],
+ ["it","IT & Systems","server","#1e40af","#38bdf8","Infrastructure, security and backups."],
+ ["kb","Knowledge Base","bookopen","#0ea5e9","#67e8f9","Articles, FAQs and how-to guides."],
+ ["events","Events","cal","#7c3aed","#a78bfa","Upcoming events, past events and schedules."],
+ ["reports","Reports","chart","#3b82f6","#93c5fd","Summaries, analytics and dashboards."]
+].map(([id,name,ic2,c1,c2,desc])=>({id,name,icon:ic2,c1,c2,desc}));
+
+/* ---------- Mock items (name:type per collection) ---------- */
+const SEEDS = {
+ ai:["Fable AI Assistant:AI Project","Content Generator:AI Project","Document Analyzer:AI Project","Prompt Library v3:Template","Agent Eval Runs:Research","Fine-tune Notes:Note"],
+ legal:["Contracts 2026:Document","NDA – Nordvik AB:PDF","Case Study – IP Dispute:Research","Terms of Service Draft:Document","Hovrätten Correspondence:Document"],
+ finance:["Q2 Budget Overview:Spreadsheet","Invoice #2024-046:PDF","Monthly Report – May:Document","Tax Summary 2024:Spreadsheet","Business Expenses Q1:PDF","Cash Flow Forecast:Spreadsheet"],
+ notes:["Daily Notes – July:Note","Ideas Scratchpad:Note","Research Log:Note","Meeting Notes – Ops:Note","Reading List:Note","Standup Summary:Note","Inbox Zero Plan:Note"],
+ training:["Prompt Engineering 101:Training","Firebase Basics:Training","Certification – Cloud:PDF","Tutorial – Grid Layouts:Video","Onboarding Deck:Template","Workshop Recording:Video"],
+ images:["Landscape Pack 04:Image","Architecture Refs:Moodboard","Inspiration Board:Moodboard","Glass UI Shots:Image","Hero Banner Draft:Image","Logo Explorations:Image","Texture Library:Image","Palette Studies:Image"],
+ links:["Design Resources:Link","API References:Link","Bookmark Dump – June:Link","Competitor Watchlist:Link","CSS Tricks Vault:Link","Reading Queue:Link","Tool Directory:Link"],
+ archive:["Old Projects 2023:Archive","Completed – Site v1:Archive","Legacy Documents:Archive","Retired Templates:Archive","Backup Index:Archive","Press Kit 2022:Archive"],
+ clients:["Profile – Nordvik AB:Client","Profile – Beta Studio:Client","Communications Log:Document","Project Brief – Atlas:Project","Contract Renewals:Spreadsheet","Feedback Summary:Report","Client FAQ:Document"],
+ templates:["Proposal Template:Template","Invoice Template:Template","Slide Master:Template","Email Sequences:Template","Report Skeleton:Template","Checklist – Launch:Template"],
+ research:["Study – Local-first Apps:Research","Paper – Spatial UI:Research","Insights – User Tests:Report","Survey Results Q2:Spreadsheet","Benchmark Notes:Note","Interview Transcripts:Document","Trend Scan 2026:Research"],
+ ideas:["Brainstorm – Sphere Nav:Idea","Concept – Deep Field:Idea","Prototype Notes:Idea","Feature Parking Lot:Idea","Micro-interactions:Idea","Naming Candidates:Idea","Radial Menu Concept:Idea","Zero-state Ideas:Idea"],
+ documents:["Annual Report Draft:Document","Manual – Fable Sphere:Document","Guide – Quick Start:Document","Whitepaper Outline:Document","Style Guide:Document","Process Handbook:Document","Release Notes:Document","Meeting Minutes:Document","Grant Application:Document"],
+ personal:["Journal – Summer:Note","Checklist – Health:Note","Goals 2026:Document","Trip Plan – Gotland:Project","Reading Journal:Note","Home Projects:Project"],
+ products:["Roadmap 2026:Project","Feature Specs:Document","Release Plan v2:Project","Pricing Sheet:Spreadsheet","Beta Feedback:Report"],
+ compliance:["Policies Handbook:Document","Audit Log Q2:Report","GDPR Checklist:Document","Regulation Watch:Link","Risk Register:Spreadsheet","DPA Templates:Template"],
+ marketing:["Campaign – Launch:Project","Analytics – June:Report","Asset Library:Image","Copy Bank:Document","Social Calendar:Spreadsheet","Landing Page Draft:Document"],
+ sales:["Leads Pipeline:Spreadsheet","Deals – Active:Spreadsheet","Forecast H2:Report","Outreach Scripts:Template","Pricing Objections:Note","Demo Checklist:Document"],
+ hr:["Employee Handbook:Document","Onboarding Flow:Project","Role Descriptions:Document","Vacation Tracker:Spreadsheet","Hiring Notes:Note","1:1 Templates:Template"],
+ operations:["Processes Map:Document","Workflows – Weekly:Project","SOP – Publishing:Document","Vendor List:Spreadsheet","Maintenance Log:Note","Automation Backlog:Idea"],
+ it:["Infrastructure Notes:Document","Security Checklist:Document","Backups Schedule:Spreadsheet","Access Matrix:Spreadsheet","Incident Log:Report","Domain Inventory:Link"],
+ kb:["Articles Index:Document","FAQs:Document","Guides – How-to:Document","Glossary:Document","Troubleshooting:Document","Video Library:Video","Snippets Vault:Note"],
+ events:["Upcoming – Demo Day:Event","Past Events 2025:Archive","Schedules Q3:Spreadsheet","Venue Shortlist:Link","Speaker Notes:Document"],
+ reports:["Summary – H1:Report","Analytics Deep Dive:Report","Dashboards Index:Link","KPI Sheet:Spreadsheet","Board Update:Document","Retro – Q2:Report"]
+};
+const TAGPOOL = ["local","draft","final","2026","client","internal","priority","review","v2","shared","pinned","weekly"];
+const DESCPOOL = [
+ "Working file kept in the local workspace.",
+ "Latest version — updated locally, no cloud sync.",
+ "Reference material for ongoing work.",
+ "Draft state. Needs a review pass before it is final.",
+ "Imported from the previous workspace during migration.",
+ "Pinned for quick access from the root view.",
+ "Stable version. Safe to reuse as a starting point."
+];
+const hash = s => { let h=2166136261; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);} return Math.abs(h); };
+const relTime = m => m<60?`${m} min ago`:m<1440?`${Math.round(m/60)} hr${Math.round(m/60)>1?"s":""} ago`
+  :m<10080?`${Math.round(m/1440)} days ago`
+  :new Date(Date.now()-m*60000).toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+
+function buildItems(){
+  const items=[]; let n=0;
+  for(const c of COLS){
+    (SEEDS[c.id]||[]).forEach((s,i)=>{
+      const ci=s.lastIndexOf(":");
+      const name=s.slice(0,ci), type=s.slice(ci+1);
+      const h=hash(c.id+name);
+      const tags=[TAGPOOL[h%TAGPOOL.length]]; if(h%3===0) tags.push(TAGPOOL[(h>>4)%TAGPOOL.length]);
+      items.push({
+        id:"it"+(++n), col:c.id, name, type,
+        tags:[...new Set(tags)],
+        modMin: i===0 ? 2+(h%50) : 60+(h%120000),
+        desc: DESCPOOL[h%DESCPOOL.length],
+        size: type==="Image"||type==="Video" ? `${(1+(h%80)/10).toFixed(1)} MB` : `${20+(h%880)} KB`
+      });
+    });
+  }
+  return items;
+}
+
+/* ---------- State & persistence ---------- */
+const LS_KEY="fable-sphere-pass1";
+let DB;
+function loadDB(){
+  try{ const raw=localStorage.getItem(LS_KEY); if(raw){ DB=JSON.parse(raw); if(DB && DB.items && DB.cols) return; } }catch(e){}
+  DB={ cols:COLS.map(c=>({...c})), items:buildItems() };
+}
+function saveDB(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
+  catch(e){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify({cols:DB.cols, items:DB.items.map(i=>{const {preview,...rest}=i; return rest;})})); }
+    catch(e2){}
+  }
+}
+loadDB();
+
+const state = {
+  view: "sphere",           // 'sphere' (SWIPE) | 'flat' | 'detail'
+  open: "__all",             // boot into All Items so travel + inspector are live
+  selected: null,            // {kind:'collection'|'item', id}
+  query: "",
+  typeFilter: null,          // inside a collection
+  sort: {key:"name", dir:1}
+};
+
+const colById = id => DB.cols.find(c=>c.id===id);
+const itemsOf = id => DB.items.filter(i=>i.col===id);
+const itemById = id => DB.items.find(i=>i.id===id);
+
+/* ---------- Derived: entries for current view ---------- */
+function currentEntries(){
+  const q=state.query.trim().toLowerCase();
+  if(state.open===null){
+    let list=DB.cols.map(c=>({kind:"collection",ref:c}));
+    if(q) list=list.filter(e=>e.ref.name.toLowerCase().includes(q)||e.ref.desc.toLowerCase().includes(q));
+    return sortEntries(list);
+  }
+  let src = state.open==="__all" ? DB.items : itemsOf(state.open);
+  let list = src.map(i=>({kind:"item",ref:i}));
+  if(state.typeFilter) list=list.filter(e=>e.ref.type===state.typeFilter);
+  if(q) list=list.filter(e=>(e.ref.name+" "+e.ref.type+" "+e.ref.tags.join(" ")).toLowerCase().includes(q));
+  return sortEntries(list);
+}
+function sortEntries(list){
+  const {key,dir}=state.sort;
+  return list.slice().sort((a,b)=>{
+    let av,bv;
+    if(key==="name"){av=a.ref.name;bv=b.ref.name;}
+    else if(key==="type"){av=a.kind==="item"?a.ref.type:"Collection";bv=b.kind==="item"?b.ref.type:"Collection";}
+    else {av=a.kind==="item"?a.ref.modMin:hash(a.ref.id)%9000;bv=b.kind==="item"?b.ref.modMin:hash(b.ref.id)%9000;}
+    return (av>bv?1:av<bv?-1:0)*dir;
+  });
+}
+
+/* ---------- Renderers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+
+function renderAll(){ renderNav(); renderChips(); renderCrumbs(); renderContent(); renderInspector(); renderBottom(); renderNewLabel(); curveRows(); }
+
+/* Bend the children of the rows above/below the matrix along the SAME arc as the
+   matrix columns, so search/upload/new, chips, back/breadcrumbs and the bottom
+   controls visibly follow the U — not just tilt. */
+const CURVE_ROWS=[".topbar",".chipsrow",".crumbrow",".bottombar"];
+/* Control rows are straight in every mode; this clears any per-child transforms. */
+function curveRows(){
+  for(const sel of CURVE_ROWS){
+    const row=document.querySelector(sel); if(!row) continue;
+    for(const el of row.children){ if(el.style&&el.style.transform) el.style.transform=""; }
+  }
+}
+window.addEventListener("resize",()=>curveRows());
+
+function renderNav(){
+  const el=$("#navlist");
+  let h=`<div class="navitem ${state.open===null?"active":""}" data-nav="__home">${icon("folder")}<span>Home</span><span class="cnt">${DB.cols.length}</span></div>`;
+  h+=`<div class="navitem ${state.open==="__all"?"active":""}" data-nav="__all">${icon("gridic")}<span>All Items</span><span class="cnt">${DB.items.length}</span></div>`;
+  for(const c of DB.cols){
+    h+=`<div class="navitem ${state.open===c.id?"active":""}" data-nav="${c.id}">
+      <span class="swatch" style="${grad(c.c1,c.c2)}">${icon(c.icon)}</span>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.name)}</span>
+      <span class="cnt">${itemsOf(c.id).length}</span></div>`;
+  }
+  el.innerHTML=h;
+  $("#brandLogo").innerHTML=icon("cube");
+}
+
+function renderChips(){
+  const el=$("#chips");
+  const backChip = state.open!==null ? `<div class="chip" data-back="1" title="Back to Home">
+    <svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px"><path d="M15 18l-6-6 6-6"/></svg> Back</div>` : "";
+  if(state.open===null){
+    let h=`<div class="chip ${!state.query?"active":""}" data-chip-all="1">${icon("gridic")} All Items <small>${DB.items.length}</small></div>`;
+    for(const c of DB.cols.slice(0,10)){
+      h+=`<div class="chip" data-chip-col="${c.id}"><span class="swatch" style="${grad(c.c1,c.c2)}">${icon(c.icon)}</span>${esc(c.name)} <small>${itemsOf(c.id).length}</small></div>`;
+    }
+    el.innerHTML=h;
+  } else {
+    const src=state.open==="__all"?DB.items:itemsOf(state.open);
+    const types=[...new Set(src.map(i=>i.type))].sort();
+    let h=backChip+`<div class="chip ${!state.typeFilter?"active":""}" data-chip-type="">All types <small>${src.length}</small></div>`;
+    for(const t of types){
+      h+=`<div class="chip ${state.typeFilter===t?"active":""}" data-chip-type="${esc(t)}">${icon(TYPE_ICON[t]||"file")} ${esc(t)} <small>${src.filter(i=>i.type===t).length}</small></div>`;
+    }
+    el.innerHTML=h;
+  }
+  curveRows();
+}
+
+function renderCrumbs(){
+  const row=$("#crumbrow");
+  if(state.open===null){ row.classList.add("hidden"); return; }
+  row.classList.remove("hidden");
+  const cur=state.open==="__all"?"All Items":colById(state.open)?.name||"";
+  $("#crumbs").innerHTML=`<a data-crumb-home="1">Home</a><span>›</span><span class="cur">${esc(cur)}</span>`;
+}
+
+function collectionCard(c,sel){
+  const its=itemsOf(c.id);
+  const top=its.slice().sort((a,b)=>a.modMin-b.modMin).slice(0,3);
+  return `<div class="card ${sel?"selected":""}" data-kind="collection" data-id="${c.id}" tabindex="-1">
+    <div class="head"><span class="swatch" style="${grad(c.c1,c.c2)}">${icon(c.icon)}</span><b>${esc(c.name)}</b><span class="cnt">${its.length} items</span></div>
+    <div class="thumb" style="${grad(c.c1,c.c2)}">${icon(c.icon)}</div>
+    <div class="rows">${top.map(i=>`<div class="r">${icon(TYPE_ICON[i.type]||"file")}<span>${esc(i.name)}</span></div>`).join("")||'<div class="r"><span style="color:var(--ink-3)">Empty collection</span></div>'}</div>
+    <div class="foot"><span>Local</span><span class="go">View all →</span></div></div>`;
+}
+function itemCard(it,sel){
+  const g=TYPE_GRAD[it.type]||["#64748b","#94a3b8"];
+  const th=it.preview?`background-image:url('${it.preview}');background-size:cover;background-position:center`:grad(g[0],g[1]);
+  return `<div class="card item ${sel?"selected":""}" data-kind="item" data-id="${it.id}" tabindex="-1">
+    <div class="head"><span class="swatch" style="${grad(g[0],g[1])}">${icon(TYPE_ICON[it.type]||"file")}</span><b>${esc(it.type)}</b><span class="cnt">${it.size}</span></div>
+    <div class="thumb" style="${th}">${it.preview?"":icon(TYPE_ICON[it.type]||"file")}</div>
+    <div class="meta"><b>${esc(it.name)}</b>
+      <div class="sub"><span>${relTime(it.modMin)}</span>${it.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+    </div></div>`;
+}
+
+function renderContent(){
+  const el=$("#content");
+  sphereStop();
+  const entries=currentEntries();
+  const selId=state.selected?state.selected.id:null;
+  if(!entries.length){
+    el.innerHTML=`<div class="empty"><b>Nothing here${state.query?` for “${esc(state.query)}”`:""}</b>${state.query?"Try a different search.":"Use New to add the first item."}</div>`;
+    return;
+  }
+  if(state.view==="sphere"){
+    if(state.selected && !entries.some(e=>e.ref.id===state.selected.id)) state.selected=null;
+    if(!state.selected && entries.length){ state.selected={kind:entries[0].kind, id:entries[0].ref.id}; }
+    renderSphereView(entries, state.selected?state.selected.id:null);
+    renderInspector();
+  } else if(state.view==="flat"){
+    el.innerHTML=`<div class="grid${state.open===null?" root":""}">${entries.map(e=>e.kind==="collection"?collectionCard(e.ref,selId===e.ref.id):itemCard(e.ref,selId===e.ref.id)).join("")}</div>`;
+  } else {
+    const arrow=k=>state.sort.key===k?(state.sort.dir===1?" ↑":" ↓"):"";
+    const isRoot=state.open===null;
+    let h=`<div class="table"><div class="trow thead">
+      <span data-sort="name">Name${arrow("name")}</span><span data-sort="type">Type${arrow("type")}</span>
+      <span>Tags</span><span data-sort="mod">Modified${arrow("mod")}</span><span class="cnt2">${isRoot?"Items":"Size"}</span></div>`;
+    for(const e of entries){
+      if(e.kind==="collection"){
+        const c=e.ref;
+        h+=`<div class="trow ${selId===c.id?"selected":""}" data-kind="collection" data-id="${c.id}">
+          <span class="name"><span class="swatch" style="${grad(c.c1,c.c2)}">${icon(c.icon)}</span><span>${esc(c.name)}</span></span>
+          <span>Collection</span><span class="tags"><span class="tag">local</span></span>
+          <span class="mod">—</span><span class="cnt2">${itemsOf(c.id).length}</span></div>`;
+      } else {
+        const it=e.ref, g=TYPE_GRAD[it.type]||["#64748b","#94a3b8"];
+        h+=`<div class="trow ${selId===it.id?"selected":""}" data-kind="item" data-id="${it.id}">
+          <span class="name"><span class="swatch" style="${grad(g[0],g[1])}">${icon(TYPE_ICON[it.type]||"file")}</span><span>${esc(it.name)}</span></span>
+          <span>${esc(it.type)}</span><span class="tags">${it.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</span>
+          <span class="mod">${relTime(it.modMin)}</span><span class="cnt2">${it.size}</span></div>`;
+      }
+    }
+    el.innerHTML=h+"</div>";
+  }
+}
+
+/* ---------- Sphere / Cylinder engine (Pass 2, first technical version) ----------
+   Horizontal card belt: 4 fixed rows, columns flow left→right behind a 6-column
+   viewport. Custom physics: pointer drag → velocity samples → momentum projection
+   → critically-damped spring that always lands exactly on a column boundary.   */
+const sphere={raf:0,pos:0,vel:0,idx:0,target:0,stride:1,maxIdx:0,N:0,t:0,cw:0,rh:0,g:8,lastResize:"—",
+              wrap:null,belt:null,ind:null,ro:null,drag:null,swallow:false,wheelT:0,entries:[]};
+/* Cylinder feel constants — adjustable from the QA panel */
+const TUNE={proj:300, k:0.0002, sens:1.0, rubber:0.3, curve:32, depth:130};
+
+function sphereStop(){
+  if(sphere.raf) cancelAnimationFrame(sphere.raf);
+  if(sphere.ro) sphere.ro.disconnect();
+  clearTimeout(sphere.wheelT);
+  sphere.raf=0; sphere.ro=null; sphere.wrap=null; sphere.belt=null; sphere.ind=null; sphere.drag=null;
+}
+
+function renderSphereView(entries, selId){
+  const el=$("#content");
+  el.innerHTML=`<div class="sphere-wrap" id="sphereWrap">
+    <div class="sphere-belt" id="sphereBelt">${entries.map(e=>e.kind==="collection"?collectionCard(e.ref,selId===e.ref.id):itemCard(e.ref,selId===e.ref.id)).join("")}</div>
+    <div class="sphere-ind" id="sphereInd"><i></i></div></div>`;
+  sphere.wrap=$("#sphereWrap"); sphere.belt=$("#sphereBelt"); sphere.ind=$("#sphereInd");
+  sphere.entries=entries;
+  sphereLayout();
+  sphere.idx=Math.max(0,Math.min(sphere.idx,sphere.maxIdx));
+  sphere.pos=sphere.idx*sphere.stride; sphere.vel=0;
+  bindSphere();
+  sphereApply();
+}
+
+function sphereLayout(){
+  const w=sphere.wrap; if(!w) return;
+  const g=8, viewW=w.clientWidth, viewH=w.clientHeight-18;   /* 14px indicator + 4px belt padding */
+  const cw=Math.max(70,(viewW-5*g)/6);
+  const rh=Math.max(56,(viewH-3*g)/4);
+  sphere.cw=cw; sphere.rh=rh; sphere.g=g; sphere.viewW=viewW;
+  sphere.stride=cw+g;
+  sphere.N=Math.ceil(sphere.entries.length/4);
+  sphere.maxIdx=Math.max(0,sphere.N-6);
+  sphere.belt.style.gridTemplateRows=`repeat(4, ${rh}px)`;
+  sphere.belt.style.gridAutoColumns=`${cw}px`;
+  sphere.belt.style.gap=g+"px";
+}
+
+function sphereApply(){
+  if(!sphere.belt) return;
+  sphere.belt.style.transform=`translate3d(${-sphere.pos}px,0,0)`;
+  /* TRUE inside-cylinder projection: each column sits on an arc of radius R around
+     the viewer. Columns compress toward the edges, rotate to face the center, and
+     recede in depth — and the next columns beyond the 6-window wrap visibly into
+     the room at both edges. TUNE.curve controls R (stronger curve = tighter room). */
+  const kids=sphere.belt.children;
+  if(kids.length){
+    const half=sphere.viewW/2||1;
+    const R=half*(38/Math.max(6,TUNE.curve)); sphere.R=R;
+    const thEdge=Math.asin(Math.min(1,half/R));
+    const zSag=Math.min(220, R*(1-Math.cos(thEdge)));   /* cap so the strong arc stays readable */
+    const cosE=1-Math.cos(thEdge)||1;
+    const c0=Math.max(0,Math.floor(sphere.pos/sphere.stride)-3);
+    const c1=Math.min(sphere.N-1,Math.floor((sphere.pos+sphere.viewW)/sphere.stride)+3);
+    for(let c=c0;c<=c1;c++){
+      const xLin=c*sphere.stride+sphere.cw/2-sphere.pos-half;
+      const th=Math.max(-1.35,Math.min(1.35,xLin/R));
+      const dx=R*Math.sin(th)-xLin;
+      const f=(1-Math.cos(th))/cosE;               /* 0 at center → 1 at window edge */
+      const z=Math.min(-12, -42 - zSag*(1-f));     /* U: center deepest, edges sweep forward */
+      const a=Math.abs(th);
+      const op=a<=thEdge?1:Math.max(0,1-(a-thEdge)/0.35);
+      const tf=`translate3d(${dx.toFixed(1)}px,0,${z.toFixed(1)}px) rotateY(${(-th*45.8).toFixed(2)}deg)`;
+      for(let r=0;r<4;r++){ const el=kids[c*4+r]; if(el){
+        el.style.transform=tf; el.style.opacity=op.toFixed(2);
+        el.style.pointerEvents = op<1 ? "none" : "";   /* wrap slivers never steal clicks */
+      } }
+    }
+  }
+  const frac=Math.min(1,6/Math.max(1,sphere.N));
+  const bar=sphere.ind.firstElementChild;
+  bar.style.width=(frac*100)+"%";
+  const maxPos=sphere.maxIdx*sphere.stride;
+  const p=maxPos>0?Math.min(1,Math.max(0,sphere.pos/maxPos)):0;
+  bar.style.left=(p*(1-frac)*100)+"%";
+}
+
+function sphereSnapTo(i){
+  sphere.idx=Math.max(0,Math.min(sphere.maxIdx,i));
+  sphere.target=sphere.idx*sphere.stride;
+  sphere.t=performance.now();
+  cancelAnimationFrame(sphere.raf);
+  const K=TUNE.k, C=2*Math.sqrt(K);            /* critically damped spring */
+  const step=()=>{
+    const now=performance.now(); const dt=Math.min(34,now-sphere.t); sphere.t=now;
+    const x=sphere.target-sphere.pos;
+    sphere.vel+=(K*x - C*sphere.vel)*dt;
+    sphere.pos+=sphere.vel*dt;
+    if(Math.abs(x)<0.5 && Math.abs(sphere.vel)<0.02){
+      sphere.pos=sphere.target; sphere.vel=0; sphere.raf=0; sphereApply();
+      if(sphere.ind){ sphere.ind.classList.add("pulse"); setTimeout(()=>sphere.ind&&sphere.ind.classList.remove("pulse"),180); }
+      return;
+    }
+    sphereApply();
+    sphere.raf=requestAnimationFrame(step);
+  };
+  sphere.raf=requestAnimationFrame(step);
+}
+
+function sphereFling(){
+  sphere.vel=Math.max(-6,Math.min(6,sphere.vel));   /* cap fling speed */
+  const proj=sphere.pos+sphere.vel*TUNE.proj;       /* momentum projection */
+  sphereSnapTo(Math.round(proj/sphere.stride));
+}
+
+function bindSphere(){
+  const w=sphere.wrap;
+  w.addEventListener("pointerdown",e=>{
+    if(e.button!==0) return;
+    cancelAnimationFrame(sphere.raf); sphere.raf=0;
+    sphere.drag={x:e.clientX,moved:0,pid:e.pointerId,captured:false,samples:[[performance.now(),e.clientX]]};
+    w.classList.add("dragging");
+  });
+  w.addEventListener("pointermove",e=>{
+    const d=sphere.drag; if(!d) return;
+    const dx=e.clientX-d.x; d.x=e.clientX; d.moved+=Math.abs(dx);
+    if(!d.captured && d.moved>6){ try{w.setPointerCapture(d.pid);}catch(err){} d.captured=true; }
+    const max=sphere.maxIdx*sphere.stride;
+    const out=(sphere.pos<0||sphere.pos>max)?TUNE.rubber:1;   /* rubber band at edges */
+    sphere.pos-=dx*out*TUNE.sens;
+    sphere.pos=Math.max(-sphere.stride*0.8, Math.min(max+sphere.stride*0.8, sphere.pos));
+    const now=performance.now();
+    d.samples.push([now,e.clientX]);
+    while(d.samples.length>2 && now-d.samples[0][0]>90) d.samples.shift();
+    sphereApply();
+  });
+  const up=()=>{
+    const d=sphere.drag; if(!d) return;
+    sphere.drag=null; w.classList.remove("dragging");
+    if(d.moved>6) sphere.swallow=true;
+    let v=0; const s=d.samples;
+    if(s.length>1){ const [t0,x0]=s[0],[t1,x1]=s[s.length-1]; if(t1>t0) v=(x1-x0)/(t1-t0); }
+    sphere.vel=-v;
+    sphereFling();
+  };
+  w.addEventListener("pointerup",up);
+  w.addEventListener("pointercancel",up);
+  w.addEventListener("wheel",e=>{
+    const dx=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:(e.shiftKey?e.deltaY:0);
+    if(!dx) return;
+    e.preventDefault();
+    cancelAnimationFrame(sphere.raf); sphere.raf=0;
+    const max=sphere.maxIdx*sphere.stride;
+    sphere.pos=Math.max(-40,Math.min(max+40,sphere.pos+dx));
+    sphereApply();
+    clearTimeout(sphere.wheelT);
+    sphere.wheelT=setTimeout(()=>{ sphere.vel=0; sphereFling(); },140);
+  },{passive:false});
+  sphere.ro=new ResizeObserver(()=>{
+    if(!sphere.wrap||!document.body.contains(sphere.wrap)) return;
+    sphere.lastResize=new Date().toLocaleTimeString();
+    sphereLayout();
+    sphere.idx=Math.max(0,Math.min(sphere.idx,sphere.maxIdx));
+    if(!sphere.raf && !sphere.drag){ sphere.pos=sphere.idx*sphere.stride; sphere.vel=0; }
+    sphereApply();
+  });
+  sphere.ro.observe(w);
+}
+
+function sphereEnsureVisible(entryIdx){
+  if(state.view!=="sphere"||!sphere.belt) return;
+  const ci=Math.floor(entryIdx/4);
+  if(ci<sphere.idx) { sphere.vel=0; sphereSnapTo(ci); }
+  else if(ci>sphere.idx+5) { sphere.vel=0; sphereSnapTo(ci-5); }
+}
+
+function renderInspector(){
+  const el=$("#inspector");
+  const sel=state.selected;
+  if(!sel){
+    const scope=state.open===null?"a collection":"an item";
+    el.innerHTML=`<div class="insp-empty">Select ${scope} to see details here.<br><br>
+      <span style="font-size:11px">Single click selects · double click or Enter opens.</span></div>`;
+    return;
+  }
+  if(sel.kind==="collection"){
+    const c=colById(sel.id); if(!c){state.selected=null;return renderInspector();}
+    const its=itemsOf(c.id);
+    const recent=its.slice().sort((a,b)=>a.modMin-b.modMin).slice(0,5);
+    el.innerHTML=`<div class="body">
+      <div class="insp-title"><h2>${esc(c.name)}</h2><button class="btn sm" data-act="close">✕</button></div>
+      <div class="insp-sub">${its.length} items <span style="color:var(--ok)">●</span> Local collection</div>
+      <div class="insp-thumb" style="${grad(c.c1,c.c2)}">${icon(c.icon)}</div>
+      <div class="insp-desc">${esc(c.desc)}</div>
+      <div class="insp-sync"><span class="dot"></span><div><b>Stored locally</b><small>Last updated: ${its.length?relTime(Math.min(...its.map(i=>i.modMin))):"—"}</small></div></div>
+      <div class="insp-h">Recent items</div>
+      <div class="insp-recent">${recent.map(i=>{const g=TYPE_GRAD[i.type]||["#64748b","#94a3b8"];
+        return `<div class="ri" data-open-item="${i.id}"><span class="swatch" style="${grad(g[0],g[1])}">${icon(TYPE_ICON[i.type]||"file")}</span><div><b>${esc(i.name)}</b><small>${esc(i.type)} · ${relTime(i.modMin)}</small></div></div>`;}).join("")||'<div style="font-size:11.5px;color:var(--ink-3)">No items yet.</div>'}</div>
+    </div>
+    <div class="insp-actions">
+      <button class="btn open-w" data-act="open">Open collection →</button>
+      <div class="row2"><button class="btn" data-act="rename">Rename</button><button class="btn danger" data-act="delete">Delete</button></div>
+    </div>`;
+  } else {
+    const it=itemById(sel.id); if(!it){state.selected=null;return renderInspector();}
+    const c=colById(it.col), g=TYPE_GRAD[it.type]||["#64748b","#94a3b8"];
+    const th=it.preview?`background-image:url('${it.preview}');background-size:cover;background-position:center`:grad(g[0],g[1]);
+    el.innerHTML=`<div class="body">
+      <div class="insp-title"><h2>${esc(it.name)}</h2><button class="btn sm" data-act="close">✕</button></div>
+      <div class="insp-sub">${esc(it.type)} · in ${esc(c?c.name:"—")}</div>
+      <div class="insp-thumb" style="${th}">${it.preview?"":icon(TYPE_ICON[it.type]||"file")}</div>
+      <dl class="kv"><dt>Type</dt><dd>${esc(it.type)}</dd><dt>Collection</dt><dd>${esc(c?c.name:"—")}</dd>
+        <dt>Modified</dt><dd>${relTime(it.modMin)}</dd><dt>Size</dt><dd>${it.size}</dd></dl>
+      <div style="margin:6px 0 12px">${it.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join(" ")}</div>
+      <div class="insp-h">Description</div>
+      <div class="insp-desc">${esc(it.desc)}</div>
+      <div class="insp-sync"><span class="dot"></span><div><b>Stored locally</b><small>No cloud copy exists</small></div></div>
+    </div>
+    <div class="insp-actions">
+      <button class="btn open-w" data-act="open">Open item</button>
+      <div class="row2"><button class="btn" data-act="rename">Edit</button><button class="btn danger" data-act="delete">Delete</button></div>
+    </div>`;
+  }
+}
+
+function renderBottom(){
+  $("#statpill").innerHTML=`<span>${DB.cols.length} COLLECTIONS</span><span>·</span><span>${DB.items.length} ITEMS</span><span>·</span><span class="ok">100% LOCAL ✓</span>`;
+  $("#btnSphere").classList.toggle("active",state.view==="sphere");
+  $("#btnFlat").classList.toggle("active",state.view==="flat");
+  $("#btnDetail").classList.toggle("active",state.view==="detail");
+  document.body.classList.toggle("swipe",state.view==="sphere");
+  const qt=$("#qaToggle"); if(qt) qt.style.display = state.view==="sphere" ? "" : "none";
+  curveRows();
+}
+function renderNewLabel(){
+  $("#newBtnLabel").textContent = state.open===null ? "New collection" : "New item";
+}
+
+/* ---------- Actions ---------- */
+function select(kind,id){
+  state.selected={kind,id};
+  if(state.view==="sphere" && sphere.belt){
+    sphere.belt.querySelectorAll(".card.selected").forEach(n=>n.classList.remove("selected"));
+    const n=sphere.belt.querySelector(`[data-kind][data-id="${id}"]`);
+    if(n) n.classList.add("selected");
+    renderInspector();
+    return;
+  }
+  renderContent(); renderInspector();
+}
+function clearSelection(){ state.selected=null; renderContent(); renderInspector(); }
+function openEntry(kind,id){
+  if(kind==="collection"){
+    state.open=id; state.typeFilter=null; state.query=""; $("#searchInput").value="";
+    state.selected=null; sphere.idx=0; renderAll(); $("#content").focus();
+  } else {
+    const it=itemById(id); if(!it) return;
+    select("item",id);
+    toast(`Opened “${it.name}” (preview — file open lands in a later pass)`);
+  }
+}
+function goHome(){ state.open=null; state.typeFilter=null; state.query=""; $("#searchInput").value=""; state.selected=null; sphere.idx=0; renderAll(); }
+
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* ---------- Modals ---------- */
+const modalRoot=$("#modal-root");
+function closeModal(){ modalRoot.classList.remove("show"); modalRoot.innerHTML=""; }
+function modal(html,onMount){
+  modalRoot.innerHTML=`<div class="modal">${html}</div>`;
+  modalRoot.classList.add("show");
+  if(onMount) onMount(modalRoot.querySelector(".modal"));
+  const first=modalRoot.querySelector("input,select,textarea,button"); if(first) first.focus();
+}
+modalRoot.addEventListener("click",e=>{ if(e.target===modalRoot) closeModal(); });
+
+function confirmDelete(kind,id){
+  let name,extra="";
+  if(kind==="collection"){ const c=colById(id); if(!c)return; name=c.name;
+    const n=itemsOf(id).length; if(n) extra=` and the <b>${n} item${n>1?"s":""}</b> inside it`;
+  } else { const it=itemById(id); if(!it)return; name=it.name; }
+  modal(`<h3>Delete “${esc(name)}”?</h3>
+    <p>This removes the ${kind}${extra} from your local workspace. This can't be undone.</p>
+    <div class="mrow"><button class="btn" data-m="cancel">Cancel</button>
+    <button class="btn confirm-danger" data-m="ok">Delete</button></div>`,
+    m=>{
+      m.querySelector('[data-m="cancel"]').onclick=closeModal;
+      m.querySelector('[data-m="ok"]').onclick=()=>{
+        if(kind==="collection"){
+          DB.items=DB.items.filter(i=>i.col!==id);
+          DB.cols=DB.cols.filter(c=>c.id!==id);
+          if(state.open===id) state.open=null;
+        } else DB.items=DB.items.filter(i=>i.id!==id);
+        state.selected=null; saveDB(); closeModal(); renderAll(); toast(`Deleted “${name}”`);
+      };
+    });
+}
+
+function editEntry(kind,id){
+  if(kind==="collection"){
+    const c=colById(id); if(!c)return;
+    modal(`<h3>Rename collection</h3>
+      <label>Name</label><input id="mName" value="${esc(c.name)}" maxlength="40">
+      <label>Description</label><textarea id="mDesc" maxlength="140">${esc(c.desc)}</textarea>
+      <div class="mrow"><button class="btn" data-m="cancel">Cancel</button><button class="btn primary" data-m="ok">Save changes</button></div>`,
+      m=>{
+        m.querySelector('[data-m="cancel"]').onclick=closeModal;
+        m.querySelector('[data-m="ok"]').onclick=()=>{
+          const v=m.querySelector("#mName").value.trim(); if(!v) return;
+          c.name=v; c.desc=m.querySelector("#mDesc").value.trim();
+          saveDB(); closeModal(); renderAll(); toast("Saved changes");
+        };
+      });
+  } else {
+    const it=itemById(id); if(!it)return;
+    modal(`<h3>Edit item</h3>
+      <label>Name</label><input id="mName" value="${esc(it.name)}" maxlength="60">
+      <label>Type</label><select id="mType">${Object.keys(TYPE_ICON).filter(t=>t!=="Collection").map(t=>`<option ${t===it.type?"selected":""}>${t}</option>`).join("")}</select>
+      <label>Tags (comma separated)</label><input id="mTags" value="${esc(it.tags.join(", "))}">
+      <label>Description</label><textarea id="mDesc" maxlength="200">${esc(it.desc)}</textarea>
+      <div class="mrow"><button class="btn" data-m="cancel">Cancel</button><button class="btn primary" data-m="ok">Save changes</button></div>`,
+      m=>{
+        m.querySelector('[data-m="cancel"]').onclick=closeModal;
+        m.querySelector('[data-m="ok"]').onclick=()=>{
+          const v=m.querySelector("#mName").value.trim(); if(!v) return;
+          it.name=v; it.type=m.querySelector("#mType").value;
+          it.tags=m.querySelector("#mTags").value.split(",").map(s=>s.trim()).filter(Boolean).slice(0,4);
+          it.desc=m.querySelector("#mDesc").value.trim(); it.modMin=1;
+          saveDB(); closeModal(); renderAll(); toast("Saved changes");
+        };
+      });
+  }
+}
+
+function newEntry(){
+  if(state.open===null){
+    modal(`<h3>New collection</h3>
+      <label>Name</label><input id="mName" placeholder="e.g. Book Project" maxlength="40">
+      <label>Description</label><textarea id="mDesc" placeholder="What lives in this collection?" maxlength="140"></textarea>
+      <div class="mrow"><button class="btn" data-m="cancel">Cancel</button><button class="btn primary" data-m="ok">Create collection</button></div>`,
+      m=>{
+        m.querySelector('[data-m="cancel"]').onclick=closeModal;
+        m.querySelector('[data-m="ok"]').onclick=()=>{
+          const v=m.querySelector("#mName").value.trim(); if(!v) return;
+          const hues=[["#2f7bff","#7c3aed"],["#0ea5e9","#22d3ee"],["#f59e0b","#fb923c"],["#16a34a","#4ade80"],["#ec4899","#f472b6"]];
+          const g=hues[hash(v)%hues.length];
+          const id="c"+Date.now();
+          DB.cols.push({id,name:v,icon:"folder",c1:g[0],c2:g[1],desc:m.querySelector("#mDesc").value.trim()||"Local collection."});
+          saveDB(); closeModal(); renderAll(); select("collection",id); toast(`Created “${v}”`);
+        };
+      });
+  } else {
+    const colId = state.open==="__all" ? DB.cols[0].id : state.open;
+    modal(`<h3>New item</h3>
+      ${state.open==="__all"?`<label>Collection</label><select id="mCol">${DB.cols.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>`:""}
+      <label>Name</label><input id="mName" placeholder="e.g. Chapter Outline v1" maxlength="60">
+      <label>Type</label><select id="mType">${Object.keys(TYPE_ICON).filter(t=>t!=="Collection").map(t=>`<option>${t}</option>`).join("")}</select>
+      <label>Tags (comma separated)</label><input id="mTags" placeholder="draft, 2026">
+      <div class="mrow"><button class="btn" data-m="cancel">Cancel</button><button class="btn primary" data-m="ok">Add item</button></div>`,
+      m=>{
+        m.querySelector('[data-m="cancel"]').onclick=closeModal;
+        m.querySelector('[data-m="ok"]').onclick=()=>{
+          const v=m.querySelector("#mName").value.trim(); if(!v) return;
+          const cid=m.querySelector("#mCol")?m.querySelector("#mCol").value:colId;
+          const id="it"+Date.now();
+          DB.items.push({id,col:cid,name:v,type:m.querySelector("#mType").value,
+            tags:m.querySelector("#mTags").value.split(",").map(s=>s.trim()).filter(Boolean).slice(0,4),
+            modMin:1,desc:"Added locally in this session.",size:`${20+hash(v)%400} KB`});
+          saveDB(); closeModal(); renderAll(); select("item",id); toast(`Added “${v}”`);
+        };
+      });
+  }
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("click",e=>{
+  if(sphere.swallow){ sphere.swallow=false; return; }
+  const nav=e.target.closest("[data-nav]");
+  if(nav){ const id=nav.dataset.nav;
+    if(id==="__home") goHome(); else openEntry("collection", id==="__all"?"__all":id); return; }
+  const backC=e.target.closest("[data-back]");
+  if(backC){ goHome(); return; }
+  const chipAll=e.target.closest("[data-chip-all]");
+  if(chipAll){ openEntry("collection","__all"); return; }
+  const chipCol=e.target.closest("[data-chip-col]");
+  if(chipCol){ openEntry("collection",chipCol.dataset.chipCol); return; }
+  const chipType=e.target.closest("[data-chip-type]");
+  if(chipType){ state.typeFilter=chipType.dataset.chipType||null; renderChips(); renderContent(); return; }
+  const crumb=e.target.closest("[data-crumb-home]");
+  if(crumb){ goHome(); return; }
+  const ri=e.target.closest("[data-open-item]");
+  if(ri){ const it=itemById(ri.dataset.openItem); if(it){ if(state.open!==it.col&&state.open!=="__all"){state.open=it.col;renderAll();} select("item",it.id);} return; }
+  const act=e.target.closest("[data-act]");
+  if(act && state.selected){
+    const {kind,id}=state.selected;
+    if(act.dataset.act==="close") clearSelection();
+    else if(act.dataset.act==="open") openEntry(kind,id);
+    else if(act.dataset.act==="rename") editEntry(kind,id);
+    else if(act.dataset.act==="delete") confirmDelete(kind,id);
+    return;
+  }
+  const sortEl=e.target.closest("[data-sort]");
+  if(sortEl){ const k=sortEl.dataset.sort;
+    if(state.sort.key===k) state.sort.dir*=-1; else state.sort={key:k,dir:1};
+    renderContent(); return; }
+  const entry=e.target.closest("[data-kind]");
+  if(entry){ select(entry.dataset.kind, entry.dataset.id); return; }
+  if(e.target.closest("#content")) clearSelection();
+});
+document.addEventListener("dblclick",e=>{
+  const entry=e.target.closest("[data-kind]");
+  if(entry) openEntry(entry.dataset.kind, entry.dataset.id);
+});
+
+$("#backBtn").addEventListener("click",goHome);
+$("#newBtn").addEventListener("click",newEntry);
+
+/* ---------- Real file upload ---------- */
+const fmtSize=b=>b<1024?`${b} B`:b<1048576?`${Math.round(b/1024)} KB`:`${(b/1048576).toFixed(1)} MB`;
+function mapType(f){
+  const t=f.type||"", n=f.name.toLowerCase();
+  if(t.startsWith("image/")) return "Image";
+  if(t.startsWith("video/")) return "Video";
+  if(t==="application/pdf"||n.endsWith(".pdf")) return "PDF";
+  if(/sheet|excel|csv/.test(t)||/\.(xlsx?|csv|numbers|ods)$/.test(n)) return "Spreadsheet";
+  if(/\.(url|webloc)$/.test(n)) return "Link";
+  if(/\.(md|markdown)$/.test(n)) return "Note";
+  return "Document";
+}
+function imgPreview(file){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{ try{
+          const max=520, sc=Math.min(1, max/Math.max(img.width,img.height));
+          const cv=document.createElement("canvas");
+          cv.width=Math.max(1,Math.round(img.width*sc)); cv.height=Math.max(1,Math.round(img.height*sc));
+          cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+          res(cv.toDataURL("image/jpeg",0.82));
+        }catch(err){ res(r.result); } };
+      img.onerror=()=>res(r.result);
+      img.src=r.result;
+    };
+    r.onerror=()=>res(null);
+    r.readAsDataURL(file);
+  });
+}
+async function filesToItems(files,colId){
+  let lastId=null;
+  for(const f of files){
+    const preview=f.type.startsWith("image/") ? await imgPreview(f) : null;
+    lastId="it"+Date.now()+Math.random().toString(36).slice(2,6);
+    DB.items.push({
+      id:lastId, col:colId, name:f.name, type:mapType(f),
+      tags:["uploaded"],
+      modMin:Math.max(1,Math.round((Date.now()-(f.lastModified||Date.now()))/60000)),
+      desc:"Uploaded from this device. Stored locally, no cloud copy.",
+      size:fmtSize(f.size), preview
+    });
+  }
+  saveDB(); renderAll();
+  if(lastId) select("item",lastId);
+  toast(`${files.length} file${files.length>1?"s":""} added to your local workspace`);
+}
+$("#uploadBtn").addEventListener("click",()=>$("#fileInput").click());
+$("#fileInput").addEventListener("change",e=>{
+  const files=[...e.target.files]; e.target.value="";
+  if(!files.length) return;
+  if(state.open && state.open!=="__all"){ filesToItems(files,state.open); return; }
+  modal(`<h3>Upload ${files.length} file${files.length>1?"s":""}</h3>
+    <p>Choose which collection the file${files.length>1?"s":""} should be added to.</p>
+    <label>Collection</label><select id="mCol">${DB.cols.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
+    <div class="mrow"><button class="btn" data-m="cancel">Cancel</button><button class="btn primary" data-m="ok">Add files</button></div>`,
+    m=>{
+      m.querySelector('[data-m="cancel"]').onclick=closeModal;
+      m.querySelector('[data-m="ok"]').onclick=()=>{ const cid=m.querySelector("#mCol").value; closeModal(); filesToItems(files,cid); };
+    });
+});
+
+$("#btnSphere").addEventListener("click",()=>{state.view="sphere";renderContent();renderBottom();});
+$("#btnFlat").addEventListener("click",()=>{state.view="flat";renderContent();renderBottom();});
+$("#btnDetail").addEventListener("click",()=>{state.view="detail";renderContent();renderBottom();});
+$("#resetBtn").addEventListener("click",()=>{
+  modal(`<h3>Reset demo data?</h3><p>This restores the original mock collections and items and discards local changes.</p>
+    <div class="mrow"><button class="btn" data-m="cancel">Cancel</button><button class="btn confirm-danger" data-m="ok">Reset data</button></div>`,
+    m=>{ m.querySelector('[data-m="cancel"]').onclick=closeModal;
+      m.querySelector('[data-m="ok"]').onclick=()=>{ try{localStorage.removeItem(LS_KEY);}catch(e){}
+        DB={cols:COLS.map(c=>({...c})),items:buildItems()}; state.open=null; state.selected=null;
+        closeModal(); renderAll(); toast("Demo data restored"); };
+    });
+});
+
+let searchT;
+$("#searchInput").addEventListener("input",e=>{
+  clearTimeout(searchT);
+  searchT=setTimeout(()=>{ state.query=e.target.value; renderContent(); if(state.open===null) renderChips(); },80);
+});
+
+document.addEventListener("keydown",e=>{
+  if(modalRoot.classList.contains("show")){ if(e.key==="Escape") closeModal(); return; }
+  const inField=/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if(e.key==="/" && !inField){ e.preventDefault(); $("#searchInput").focus(); return; }
+  if(inField){ if(e.key==="Escape"){ document.activeElement.blur(); if(state.query){state.query="";$("#searchInput").value="";renderContent();} } return; }
+  if(e.key==="Enter" && state.selected){ e.preventDefault(); openEntry(state.selected.kind,state.selected.id); return; }
+  if((e.key==="Delete"||e.key==="Backspace") && state.selected){ e.preventDefault(); confirmDelete(state.selected.kind,state.selected.id); return; }
+  if(e.key==="Escape"){ state.selected?clearSelection():(state.open!==null&&goHome()); return; }
+  if(["ArrowRight","ArrowLeft","ArrowDown","ArrowUp"].includes(e.key)){
+    e.preventDefault();
+    const entries=currentEntries(); if(!entries.length) return;
+    let step;
+    if(state.view==="sphere"){
+      step = e.key==="ArrowRight"?4:e.key==="ArrowLeft"?-4:e.key==="ArrowDown"?1:-1;
+    } else {
+      const cols = state.view==="flat" ? (getComputedStyle($(".grid")||document.body).gridTemplateColumns||"").split(" ").length||4 : 1;
+      step = e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:e.key==="ArrowDown"?(state.view==="flat"?cols:1):(state.view==="flat"?-cols:-1);
+    }
+    let idx = state.selected ? entries.findIndex(x=>x.ref.id===state.selected.id) : -1;
+    idx = idx<0 ? 0 : Math.min(entries.length-1, Math.max(0, idx+step));
+    const en=entries[idx]; select(en.kind,en.ref.id);
+    if(state.view==="sphere"){ sphereEnsureVisible(idx); return; }
+    const node=document.querySelector(`[data-kind][data-id="${en.ref.id}"]`);
+    if(node) node.scrollIntoView({block:"nearest"});
+  }
+});
+
+renderAll();
+/* Boot selection: inspector must not be empty on start */
+(function(){ const e0=currentEntries()[0]; if(e0) select(e0.kind, e0.ref.id); })();
+
+/* ---------- Sphere QA / debug panel (dev only) ---------- */
+const qa={open:false};
+const qaEl=$("#qa");
+function qaSetOpen(v){ qa.open=v; qaEl.classList.toggle("show",v&&state.view==="sphere"); if(v) qaSliders(); }
+$("#qaToggle").addEventListener("click",()=>qaSetOpen(!qa.open));
+$("#qaClose").addEventListener("click",()=>qaSetOpen(false));
+$("#qaMin").addEventListener("click",()=>qaEl.classList.toggle("min"));
+
+function qaSliders(){
+  $("#tProj").value=TUNE.proj;           $("#vProj").textContent=TUNE.proj;
+  $("#tK").value=Math.round(TUNE.k*1e5); $("#vK").textContent=Math.round(TUNE.k*1e5);
+  $("#tSens").value=TUNE.sens*100;       $("#vSens").textContent=TUNE.sens.toFixed(2);
+  $("#tRub").value=TUNE.rubber*100;      $("#vRub").textContent=TUNE.rubber.toFixed(2);
+  $("#tCurve").value=TUNE.curve;         $("#vCurve").textContent=TUNE.curve+"°";
+}
+$("#tProj").addEventListener("input",e=>{TUNE.proj=+e.target.value;$("#vProj").textContent=TUNE.proj;});
+$("#tK").addEventListener("input",e=>{TUNE.k=(+e.target.value)/1e5;$("#vK").textContent=e.target.value;});
+$("#tSens").addEventListener("input",e=>{TUNE.sens=(+e.target.value)/100;$("#vSens").textContent=TUNE.sens.toFixed(2);});
+$("#tRub").addEventListener("input",e=>{TUNE.rubber=(+e.target.value)/100;$("#vRub").textContent=TUNE.rubber.toFixed(2);});
+$("#tCurve").addEventListener("input",e=>{TUNE.curve=+e.target.value;TUNE.depth=Math.round(TUNE.curve*6.5);$("#vCurve").textContent=TUNE.curve+"°";sphereApply();curveRows();});
+$("#chips").addEventListener("scroll",()=>{ if(state.view==="sphere") curveRows(); },{passive:true});
+
+function qaSource(){
+  return state.open===null ? "root collections" : state.open==="__all" ? "all items" : `collection items (${colById(state.open)?.name||"?"})`;
+}
+
+function qaMetrics(){
+  const w=sphere.wrap; if(!w) return null;
+  const viewW=w.clientWidth;
+  const fit=Math.abs(sphere.cw*6+sphere.g*5-viewW);
+  const rem=Math.abs(sphere.pos-Math.round(sphere.pos/sphere.stride)*sphere.stride);
+  return {viewW,fit,rem,rest:!sphere.drag&&!sphere.raf,
+    cw:sphere.cw, rh:sphere.rh, g:sphere.g, stride:sphere.stride,
+    idx:sphere.idx, maxIdx:sphere.maxIdx, pos:sphere.pos, vel:sphere.vel, target:sphere.target,
+    st:sphere.drag?"DRAGGING":sphere.raf?"MOVING":"REST",
+    visCols:Math.min(6,sphere.N), N:sphere.N, lastResize:sphere.lastResize};
+}
+function qaUpdate(){
+  if(!qa.open) return;
+  if(state.view!=="sphere"){ qaEl.classList.remove("show"); return; }
+  qaEl.classList.add("show");
+  const m=qaMetrics(); if(!m) return;
+  const row=(k,v)=>`<tr><td>${k}</td><td>${v}</td></tr>`;
+  const okBad=(c,t)=>`<span class="${c?"ok":"bad"}">${t}</span>`;
+  $("#qaTable").innerHTML=
+    row("mode",state.view==="sphere"?"SWIPE (cylinder)":state.view)+
+    row("source",qaSource())+
+    row("entries",sphere.entries.length)+
+    row("rows",okBad(true,"4 (fixed)"))+
+    row("content cols",m.N)+
+    row("max scroll col",okBad(true,m.maxIdx))+
+    row("overflow →",m.maxIdx>0?'<span class="ok">yes — motion testable</span>':'<span class="bad">none (fits)</span>')+
+    row("overflow ↓",(sphere.belt&&sphere.belt.scrollHeight-sphere.belt.clientHeight<2)?'<span class="ok">NO</span>':'<span class="bad">YES</span>')+
+    row("state",m.st)+
+    row("container W",m.viewW+"px")+
+    row("card",`${m.cw.toFixed(1)} × ${m.rh.toFixed(1)}`)+
+    row("gap / stride",`${m.g} / ${m.stride.toFixed(1)}`)+
+    row("visible",`${m.visCols} × 4 cols/rows`)+
+    row("6×4 fit",okBad(m.fit<1,m.fit.toFixed(2)+"px"))+
+    row("col index",`${m.idx} / ${m.maxIdx}`)+
+    row("pos / target",`${m.pos.toFixed(1)} / ${m.target.toFixed(1)}`)+
+    row("velocity",m.vel.toFixed(3)+" px/ms")+
+    row("snap remainder",okBad(!m.rest||m.rem<0.6,m.rem.toFixed(3)+"px"))+
+    row("curve / radius",`${TUNE.curve}° / R=${Math.round(sphere.R||0)}px`)+
+    row("last resize",m.lastResize);
+}
+setInterval(qaUpdate,100);
+
+const qaFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
+const qaWaitRest=async(ms=1600)=>{const t0=performance.now();
+  while(performance.now()-t0<ms){ if(!sphere.raf&&!sphere.drag) return true; await qaFrame(); } return false; };
+
+$("#qaRun").addEventListener("click",async()=>{
+  const btn=$("#qaRun"), res=$("#qaRes"); btn.disabled=true; res.textContent="running…";
+  const out=[]; const ok=(n,c)=>out.push((c?"✓":"✗")+" "+n);
+  try{
+    if(state.view!=="sphere"){ state.view="sphere"; renderContent(); renderBottom(); }
+    await qaFrame(); await qaFrame();
+    let m=qaMetrics();
+    ok("sphere renders", !!m);
+    ok("6×4 fit at rest (<1px)", !!m && m.fit<1);
+    ok("4 rows", !!sphere.belt && getComputedStyle(sphere.belt).gridTemplateRows.split(" ").length===4);
+    ok("at rest on column (<0.6px)", !!m && m.rem<0.6);
+    ok("left nav visible", $("#nav").offsetWidth>0);
+    ok("right inspector visible", $("#inspector").offsetWidth>0);
+    /* synthetic fling + snap */
+    const idx0=sphere.idx;
+    if(sphere.maxIdx>0){
+      sphere.vel = idx0<sphere.maxIdx ? 1.4 : -1.4;
+      sphereFling();
+      const settled=await qaWaitRest();
+      const rem=Math.abs(sphere.pos-sphere.idx*sphere.stride);
+      ok("fling produces movement", sphere.idx!==idx0);
+      ok("motion settles (<1.6s)", settled);
+      ok("release snaps to column (<0.6px)", rem<0.6);
+      sphere.vel=0; sphereSnapTo(idx0); await qaWaitRest();
+    } else {
+      out.push("– This view fits exactly. Open All Items to test cylinder movement.");
+    }
+    /* curvature check: edge column rotated, center near-flat */
+    if(sphere.belt&&sphere.belt.children.length>=4){
+      const edge=sphere.belt.children[0].style.transform||"";
+      ok("curved wall transforms applied", /rotateY\((?!0deg)/.test(edge));
+    }
+    /* SWIPE belt constraints */
+    ok("all entries mapped into 4 rows only",
+       !!sphere.belt && sphere.belt.children.length===sphere.entries.length
+       && getComputedStyle(sphere.belt).gridTemplateRows.split(" ").length===4
+       && sphere.N===Math.ceil(sphere.entries.length/4));
+    ok("no vertical overflow in Swipe belt",
+       !!sphere.belt && (sphere.belt.scrollHeight-sphere.belt.clientHeight)<2
+       && sphere.belt.getBoundingClientRect().height<=sphere.wrap.clientHeight+1);
+    /* click hit-testing under 3D transforms: elementFromPoint on an edge column card */
+    (function(){
+      if(!sphere.belt) return;
+      const probe=sphere.belt.children[Math.min(sphere.belt.children.length-1, sphere.idx*4+1)];
+      const r=probe.getBoundingClientRect();
+      const hit=document.elementFromPoint(r.left+r.width/2, r.top+r.height/2);
+      const hc=hit&&hit.closest?hit.closest("[data-kind]"):null;
+      ok("click target maps to correct card (3D)", !!hc && hc.dataset.id===probe.dataset.id);
+    })();
+    /* selection via real click event */
+    const card=sphere.belt&&sphere.belt.querySelector(".card");
+    if(card){
+      card.dispatchEvent(new MouseEvent("click",{bubbles:true})); await qaFrame();
+      ok("click selects + inspector updates", !!sphere.belt.querySelector(".card.selected") && !!$("#inspector h2"));
+    }
+    ok("drag-select click guard present", typeof sphere.swallow==="boolean");
+    /* flat + detail still render, then restore sphere */
+    const keep=sphere.idx;
+    state.view="flat"; renderContent(); ok("flat renders (flexible cols)", !!$(".grid"));
+    state.view="detail"; renderContent(); ok("detail renders", !!$(".table"));
+    state.view="sphere"; renderContent(); renderBottom(); await qaFrame();
+    sphere.vel=0; sphereSnapTo(keep); await qaWaitRest();
+    ok("sphere restored on column", Math.abs(sphere.pos-sphere.idx*sphere.stride)<0.6);
+  }catch(err){ out.push("✗ error: "+err.message); }
+  const fails=out.filter(l=>l.startsWith("✗")).length;
+  res.textContent=out.join("\n")+"\n— "+(fails===0?"ALL PASS":fails+" FAIL");
+  btn.disabled=false;
+});
+
+</script>
+</body>
+</html>
