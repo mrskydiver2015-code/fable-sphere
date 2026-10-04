@@ -156,19 +156,23 @@
 .spatial {
   overflow: hidden;
   padding: 0;
-  perspective: 1200px;
+  perspective: 1100px;
+  perspective-origin: 50% 45%;
   touch-action: pan-y;
 }
 .spatial .wall {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
+  /* Receding cards must remain hit-testable behind the unpainted wall plane. */
+  pointer-events: none;
   cursor: grab;
 }
 .spatial .wall.dragging {
   cursor: grabbing;
 }
 .spatial .card {
+  pointer-events: auto;
   position: absolute;
   will-change: transform;
   transition: border-color 0.15s;

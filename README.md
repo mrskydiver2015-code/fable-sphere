@@ -12,7 +12,6 @@ DOM transforms without running a framework render loop on every pointer move.
 
 Node **22.12+** and npm are required.
 
-
 ```sh
 npm ci
 npm run dev
@@ -51,6 +50,15 @@ The spatial controller receives its viewport, controls and position state throug
 its constructor. It has no runtime dependency on storage or library queries.
 `destroy()` releases listeners, timers and observers on view changes;
 `dispose()` also removes its reduced-motion listener.
+
+SWIPE uses the original QA calibration in `src/spatial/cylinder.ts`: curvature
+32 (`R = viewportWidth / 2 × 38 / 32`, approximately 449 px at width 756),
+300 ms momentum projection, spring stiffness 0.0002 (QA value 20), drag sensitivity
+1.00 and edge resistance 0.30. CSS camera perspective is 1100 px; the QA `proj`
+value describes momentum, not that camera distance. Card dimensions and row/column
+counts remain responsive. Cards travel along an inward-facing arc with depth,
+tangent rotation and fading edge slivers; navigation and inspection stay flat.
+The critically damped spring is solved analytically for consistent 60/120 Hz motion.
 
 The application modules expose no mutable state or debug interfaces on `window`.
 Regression tests inspect visible behavior and persisted records rather than

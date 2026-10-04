@@ -1,3 +1,9 @@
+import {
+  CYLINDER,
+  projectCylinder,
+  projectedColumn,
+  springStep,
+} from "./cylinder";
 import type { LibraryEntry } from "../core/types";
 /** Owns animation, gesture listeners and resize observation. Never writes the library. */
 export class SpatialGallery {
@@ -24,6 +30,7 @@ export class SpatialGallery {
     x: number;
     time: number;
     moved: boolean;
+    samples: [number, number][];
   } | null = null;
   suppressUntil = 0;
   wheelTimer: ReturnType<typeof setTimeout> | undefined;
@@ -62,11 +69,13 @@ export class SpatialGallery {
     this.cards = [...this.wall.querySelectorAll<HTMLElement>(".card")];
     this.abort = new AbortController();
     const options = { signal: this.abort.signal };
+    this.viewport.style.perspective = `${CYLINDER.perspective}px`;
     this.layout();
     this.observer = new ResizeObserver(() => this.layout());
     this.observer.observe(this.viewport);
     const wall = this.wall;
-    wall.addEventListener(
+    const surface = this.viewport;
+    surface.addEventListener(
       "pointerdown",
       (e) => {
         if (
@@ -77,38 +86,49 @@ export class SpatialGallery {
         cancelAnimationFrame(this.raf);
         this.raf = 0;
         this.velocity = 0;
+        clearTimeout(this.wheelTimer);
         this.drag = {
           id: e.pointerId,
           start: e.clientX,
           x: e.clientX,
           time: performance.now(),
           moved: false,
+          samples: [[performance.now(), e.clientX]],
         };
       },
       options,
     );
-    wall.addEventListener(
+    surface.addEventListener(
       "pointermove",
       (e) => {
         const d = this.drag;
         if (!d || d.id !== e.pointerId) return;
-        const delta = e.clientX - d.x,
-          now = performance.now(),
-          dt = Math.max(8, now - d.time);
+        const delta = (e.clientX - d.x) * CYLINDER.dragSensitivity,
+          now = performance.now();
         if (Math.abs(e.clientX - d.start) > 7) d.moved = true;
         if (!d.moved) return;
-        wall.setPointerCapture(e.pointerId);
+        surface.setPointerCapture(e.pointerId);
         wall.classList.add("dragging");
         const resistance =
-          this.pos < 0 || this.pos > this.max * this.stride ? 0.32 : 1;
+          this.pos < 0 || this.pos > this.max * this.stride
+            ? CYLINDER.rubber
+            : 1;
         this.pos = Math.max(
-          -this.stride * 0.35,
+          -this.stride * 0.8,
           Math.min(
-            this.max * this.stride + this.stride * 0.35,
+            this.max * this.stride + this.stride * 0.8,
             this.pos - delta * resistance,
           ),
         );
-        this.velocity = 0.65 * this.velocity + 0.35 * (-delta / dt);
+        d.samples.push([now, e.clientX]);
+        while (d.samples.length > 2 && now - d.samples[0][0] > 90)
+          d.samples.shift();
+        const [startTime, startX] = d.samples[0];
+        this.velocity =
+          now > startTime
+            ? (-(e.clientX - startX) * CYLINDER.dragSensitivity) /
+              (now - startTime)
+            : 0;
         d.x = e.clientX;
         d.time = now;
         this.apply();
@@ -123,25 +143,25 @@ export class SpatialGallery {
       if (d.moved) {
         this.suppressUntil = performance.now() + 250;
         if (performance.now() - d.time > 100) this.velocity = 0;
-        if (e.type === "pointercancel") this.velocity = 0;
-        this.snap(Math.round((this.pos + this.velocity * 190) / this.stride));
+        if (e.type !== "pointerup") this.velocity = 0;
+        this.snap(projectedColumn(this.pos, this.velocity, this.stride));
         try {
-          wall.releasePointerCapture(e.pointerId);
+          surface.releasePointerCapture(e.pointerId);
         } catch {}
       }
     };
-    wall.addEventListener("pointerup", finish, options);
-    wall.addEventListener("pointercancel", finish, options);
-    wall.addEventListener(
+    surface.addEventListener("pointerup", finish, options);
+    surface.addEventListener("pointercancel", finish, options);
+    surface.addEventListener(
       "lostpointercapture",
       (e) => {
-        // Touch transfers implicit capture from a card to the wall.
+        // Touch transfers implicit capture from a card to the viewport.
         // Ignore the bubbled loss from that card during the handoff.
-        if (e.target === wall && this.drag) finish(e);
+        if (e.target === surface && this.drag) finish(e);
       },
       options,
     );
-    wall.addEventListener(
+    surface.addEventListener(
       "wheel",
       (e) => {
         if (!this.max) return;
@@ -220,15 +240,17 @@ export class SpatialGallery {
       const col = Math.floor(i / this.rows),
         left = this.offset + col * this.stride - this.pos,
         x = left + this.cw / 2 - half;
-      const angle = Math.max(-0.8, Math.min(0.8, x / (w * 1.65)));
-      const z =
-        this.cols === 1 ? 1 : 1 + Math.min(38, Math.pow(x / half, 2) * 38);
-      const bend = this.cols === 1 ? 0 : Math.sin(angle) * w * 1.65 - x;
-      card.style.transform = `translate3d(${left + bend}px,0,${z}px) rotateY(${-angle * 28}deg)`;
-      const visible = left + this.cw > 6 && left < w - 6;
-      card.style.opacity = visible ? "1" : "0";
-      card.inert = !visible;
-      card.setAttribute("aria-hidden", String(!visible));
+      const projection = projectCylinder(x, w);
+      card.style.transform = `translate3d(${half + projection.x - this.cw / 2}px,0,${projection.z}px) rotateY(${projection.rotation}deg)`;
+      // Cull by the unrolled position too: clamped far-away columns must not pile up.
+      const visible =
+        left + this.cw > -this.stride &&
+        left < w + this.stride &&
+        projection.opacity > 0;
+      const interactive = visible && projection.opacity === 1;
+      card.style.opacity = visible ? String(projection.opacity) : "0";
+      card.inert = !interactive;
+      card.setAttribute("aria-hidden", String(!interactive));
     });
     this.controls.previous.disabled = this.pos < 1;
     this.controls.next.disabled = this.pos >= this.max * this.stride - 1;
@@ -241,6 +263,10 @@ export class SpatialGallery {
         : 100) + "%";
   }
   snap(index: number, instant = false) {
+    this.velocity = Math.max(
+      -CYLINDER.maximumVelocity,
+      Math.min(CYLINDER.maximumVelocity, this.velocity),
+    );
     this.position.index = Math.max(0, Math.min(this.max, index));
     this.target = this.position.index * this.stride;
     cancelAnimationFrame(this.raf);
@@ -253,11 +279,12 @@ export class SpatialGallery {
     }
     let previous = performance.now();
     const frame = (now: number) => {
-      const dt = Math.min(32, now - previous);
+      const dt = Math.min(64, now - previous);
       previous = now;
       const distance = this.target - this.pos;
-      this.velocity += (distance * 0.00028 - this.velocity * 0.034) * dt;
-      this.pos += this.velocity * dt;
+      const next = springStep(this.pos, this.velocity, this.target, dt);
+      this.pos = next.position;
+      this.velocity = next.velocity;
       if (Math.abs(distance) < 0.4 && Math.abs(this.velocity) < 0.02) {
         this.pos = this.target;
         this.velocity = 0;
