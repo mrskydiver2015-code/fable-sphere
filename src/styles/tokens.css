@@ -1,0 +1,100 @@
+:root {
+  color-scheme: dark;
+  --bg: #151b1b;
+  --panel: #1c2323;
+  --line: #ffffff13;
+  --muted: #a0aaa5;
+  --text: #eef0e8;
+  --accent: #e7af78;
+  --serif: Georgia, "Times New Roman", serif;
+  --radius: 14px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button {
+  color: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+button,
+input,
+textarea,
+select {
+  outline-offset: 4px;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+}
+button {
+  border: 0;
+  background: none;
+}
+button svg {
+  pointer-events: none;
+}
+svg.ico {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+button {
+  touch-action: manipulation;
+}
+a {
+  color: var(--accent);
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+button,
+.card {
+  -webkit-tap-highlight-color: transparent;
+}
+input,
+textarea,
+select {
+  color: var(--text);
+  background: #111817;
+  border: 1px solid #ffffff24;
+  border-radius: 9px;
+  padding: 11px 12px;
+  max-width: 100%;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #89958f;
+}
+button:focus-visible {
+  border-radius: 6px;
+}
