@@ -85,14 +85,28 @@ changes, viewport allocation and aspect ratios. Safari/WebKit was not run in the
 implementation environment because its browser download was blocked by network
 policy; Chromium mobile emulation is not a substitute for a physical iOS check.
 
-**Showcase** is the default dataset: 40 illustrated game and creative project
+**Showcase** is the default dataset: 96 illustrated game and creative project
 covers, including Pac-Man Reimagined, Retro Arcade Lab, WebGL Shader Explorer,
 3D Gaussian Splatting, Neural Synthesis and Industrial Automation Model. Every
 cover is an original bundled 1280 × 800 SVG scene in `public/showcase/`, with no
 third-party image requests. Regenerate the illustrations and manifest with
 `python3 scripts/generate-showcase.py` (then run Prettier on `src/data/showcase.ts`).
-Covers open as full-resolution images and downloads; they are project illustrations,
-not playable games. Browser tests decode all 40 assets and verify their dimensions.
+The six categories each contain sixteen items: Games/Interactive, Generative
+Graphics, WebGL/Canvas, System Architecture, Audio/Synth and Document Studies.
+The four-row cylinder has 24 columns: 18 column advances at the desktop six-column
+calibration provide an expansive sweep, with bounded ends rather than duplicate
+cards or artificial wrapping. Browser tests decode all 96 covers and verify their
+dimensions. The one-time expansion adds 56 items to existing installations without
+resurrecting deleted v1 records or overwriting edited names and summaries.
+
+Every Showcase and Classic card opens a minimalist cover-first project dialog
+with title, category badge, summary, **Open App / Demo** and **Close**. Pac-Man
+Reimagined and Electric Maze link to `https://pacman-reimagined.vercel.app` in a
+new tab. Other entries launch their full artwork/document preview or collection;
+no nonexistent external apps are implied. Original-file preview and downloads in
+the personal workspace remain unchanged. The empty workspace retains its primary
+CTAs and adds three dashed upload targets: click to choose files, or drag a file
+over a target to highlight it and drop to import.
 
 **Classic** restores all **153 original QA mock items** from 24
 colour-coded categories, including templates, reports, documents, images and

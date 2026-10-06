@@ -17,6 +17,30 @@ export async function openEntry(id: string) {
   }
   await preview(e);
 }
+/** Demo cards open a cover-first project sheet; the action opens the actual entry. */
+export function openProject(id: string) {
+  const e = entryById(id);
+  if (!e) return;
+  let external: string | undefined;
+  try {
+    const url = new URL(e.demoUrl || "");
+    if (url.protocol === "https:") external = url.href;
+  } catch {}
+  const action = external
+    ? `<a class="btn primary" href="${escapeHTML(external)}" target="_blank" rel="noopener noreferrer">Open App / Demo</a>`
+    : `<button class="btn primary" data-launch="${escapeHTML(e.id)}">Open App / Demo</button>`;
+  openDialog(
+    "",
+    `<div class="preview-layout project-layout">
+    <div class="dialog-head"><div><span class="project-badge">${escapeHTML(e.category || itemType(e))}</span><h2 id="dialogTitle">${escapeHTML(e.name)}</h2></div><button class="icon-btn" data-close-dialog aria-label="Close preview">${icon("close")}</button></div>
+    <div class="preview-body" id="previewBody"><img src="${escapeHTML(cover(e))}" alt="${escapeHTML(e.name)} — full-resolution cover"></div>
+    <div class="project-summary"><p>${escapeHTML(e.desc || "Explore this collection and the pieces inside it.")}</p></div>
+    <div class="preview-foot"><div class="actions">${action}<button class="btn" data-close-dialog>Close</button></div>${e.demoArt ? `<a class="project-download" href="${escapeHTML(cover(e))}" download="${escapeHTML(e.name)}.svg">Download</a>` : ""}</div>
+  </div>`,
+    { preview: true },
+  );
+  $("#dialog").classList.add("project-dialog");
+}
 async function preview(e: LibraryEntry) {
   openDialog(
     "",

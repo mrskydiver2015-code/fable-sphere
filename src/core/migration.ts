@@ -79,13 +79,38 @@ export async function initializeData(): Promise<{
   migrated: number;
   warning?: string;
 }> {
-  if (!(await storage.read("meta", "showcase-v1"))) {
-    const keys = new Set(
-      (await storage.read("entries")).map((entry) => entry.key),
+  if (!(await storage.read("meta", "showcase-v2"))) {
+    const wasSeeded = !!(await storage.read("meta", "showcase-v1"));
+    const existing = new Map(
+      (await storage.read("entries")).map((entry) => [entry.key, entry]),
     );
+    const put: LibraryEntry[] = [];
+    for (const entry of makeShowcase()) {
+      const saved = existing.get(entry.key);
+      if (saved) {
+        // Refresh stock metadata, but preserve edited names, summaries and deleted v1 items.
+        put.push({
+          ...saved,
+          demoUrl: saved.demoUrl || entry.demoUrl,
+          category:
+            saved.category === "Games & Interactive Apps" ||
+            saved.category === "Creative & Technical Projects"
+              ? entry.category
+              : saved.category,
+          desc: saved.desc.startsWith(
+            "An original illustrated project cover from ",
+          )
+            ? entry.desc
+            : saved.desc,
+        });
+      } else if (!wasSeeded || entry.seed >= 40) put.push(entry);
+    }
     await storage.commit({
-      put: makeShowcase().filter((entry) => !keys.has(entry.key)),
-      meta: [{ key: "showcase-v1", value: true }],
+      put,
+      meta: [
+        { key: "showcase-v1", value: true },
+        { key: "showcase-v2", value: true },
+      ],
     });
   }
   if (await storage.read("meta", "initialized-v2")) {

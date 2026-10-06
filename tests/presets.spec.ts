@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-test("Showcase is the default with 40 decoded original covers and working previews", async ({
+test("Showcase is the default with 96 decoded original covers and working previews", async ({
   page,
 }) => {
   await page.goto("/");
   const preset = page.getByRole("combobox", { name: "Dataset preset" });
   await expect(preset).toBeEnabled();
   await expect(preset).toHaveValue("showcase");
-  await expect(page.locator(".card")).toHaveCount(40);
+  await expect(page.locator(".card")).toHaveCount(96);
   const covers = await page
     .locator(".card-art img")
     .evaluateAll(async (images) => {
@@ -19,7 +19,7 @@ test("Showcase is the default with 40 decoded original covers and working previe
         height: image.naturalHeight,
       }));
     });
-  expect(new Set(covers.map((cover) => cover.url)).size).toBe(40);
+  expect(new Set(covers.map((cover) => cover.url)).size).toBe(96);
   expect(
     covers.every((cover) => cover.width === 1280 && cover.height === 800),
   ).toBe(true);
@@ -50,7 +50,7 @@ test("presets persist independently, Empty onboards and uploaded files survive s
   await expect(
     page.getByRole("heading", { name: "Room for something wonderful." }),
   ).toBeVisible();
-  await expect(page.locator(".empty [data-import]")).toBeVisible();
+  await expect(page.locator(".empty .actions [data-import]")).toBeVisible();
   await page.locator("#fileInput").setInputFiles({
     name: "my-note.txt",
     mimeType: "text/plain",
@@ -60,7 +60,7 @@ test("presets persist independently, Empty onboards and uploaded files survive s
     page.getByRole("button", { name: "Open my-note.txt", exact: true }),
   ).toBeVisible();
   await preset.selectOption("showcase");
-  await expect(page.locator(".card")).toHaveCount(40);
+  await expect(page.locator(".card")).toHaveCount(96);
   await preset.selectOption("empty");
   await page.reload();
   await expect(preset).toHaveValue("empty");

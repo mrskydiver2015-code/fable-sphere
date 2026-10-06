@@ -78,9 +78,15 @@ test("rendered SWIPE bends inward, stays clickable and leaves controls flat", as
   await page
     .getByRole("button", { name: "Open Chronicles", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Open App / Demo", exact: true })
+    .click();
   await expect(page.locator("h1")).toHaveText("Chronicles");
   await page
     .getByRole("button", { name: "Open Deep Forest", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Open App / Demo", exact: true })
     .click();
   await page
     .getByRole("button", {

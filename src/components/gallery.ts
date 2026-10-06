@@ -49,7 +49,11 @@ export function renderContent() {
   $("#footerInfo").innerHTML =
     `<span class="accent">${String(list.length).padStart(2, "0")}</span><span>${ui.query ? "results" : ui.folder ? "pieces in this collection" : "pieces in your library"}</span><span style="opacity:.4">/</span><span>${spaceLabels[ui.space]}</span>`;
   if (!list.length) {
-    content.innerHTML = `<div class="empty"><div class="empty-orbit">${icon(ui.query ? "search" : "spark")}</div><h2>${ui.query ? "A little further afield." : ui.filter !== "all" ? "Nothing of this kind." : "Room for something wonderful."}</h2><p>${ui.query ? "No matches this time. Try another word or return to your library." : ui.filter !== "all" ? "Try Everything to see the rest of this collection." : "Start a collection, bring in a favourite image, or save the first page of a story."}</p><div class="actions">${ui.query || ui.filter !== "all" ? '<button class="btn" data-clear>Clear filters</button>' : '<button class="btn" data-new-folder>New collection</button><button class="btn primary" data-import>Import files</button>'}</div></div>`;
+    const ghostSlots =
+      !ui.query && ui.filter === "all"
+        ? `<div class="ghost-slots" aria-label="Upload drop targets">${[1, 2, 3].map((i) => `<button class="ghost-slot" data-import aria-label="Import files into slot ${i}">${icon("plus")}<span>Drop a file</span></button>`).join("")}</div>`
+        : "";
+    content.innerHTML = `<div class="empty"><div class="empty-orbit">${icon(ui.query ? "search" : "spark")}</div><h2>${ui.query ? "A little further afield." : ui.filter !== "all" ? "Nothing of this kind." : "Room for something wonderful."}</h2><p>${ui.query ? "No matches this time. Try another word or return to your library." : ui.filter !== "all" ? "Try Everything to see the rest of this collection." : "Start a collection, bring in a favourite image, or save the first page of a story."}</p><div class="actions">${ui.query || ui.filter !== "all" ? '<button class="btn" data-clear>Clear filters</button>' : '<button class="btn" data-new-folder>New collection</button><button class="btn primary" data-import>Import files</button>'}</div>${ghostSlots}</div>`;
     return;
   }
   if (ui.view === "list") {

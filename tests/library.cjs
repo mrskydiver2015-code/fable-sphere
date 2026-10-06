@@ -52,7 +52,13 @@ fs.mkdirSync(out, { recursive: true });
       .getByRole("button", { name: "Open Chronicles", exact: true })
       .click();
     await page
+      .getByRole("button", { name: "Open App / Demo", exact: true })
+      .click();
+    await page
       .getByRole("button", { name: "Open Deep Forest", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Open App / Demo", exact: true })
       .click();
     assert.match(
       await page.locator("#breadcrumbs").innerText(),
@@ -60,6 +66,9 @@ fs.mkdirSync(out, { recursive: true });
     );
     await page
       .getByRole("button", { name: "Open The forest remembers", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Open App / Demo", exact: true })
       .click();
     await page.waitForSelector("#previewBody pre");
     assert.match(

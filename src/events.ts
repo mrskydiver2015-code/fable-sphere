@@ -10,7 +10,7 @@ import { renderInspector, showDetails } from "./components/inspector";
 import { navMarkup } from "./components/navigation";
 import { openDialog, closeDialog } from "./components/dialog";
 import { editDialog, deleteDialog } from "./features/editor";
-import { openEntry } from "./features/preview";
+import { openEntry, openProject } from "./features/preview";
 import { importFiles } from "./features/import";
 import { icon } from "./components/format";
 export function bindEvents() {
@@ -65,8 +65,11 @@ export function bindEvents() {
     } else if (b.hasAttribute("data-new-folder")) editDialog();
     else if (b.hasAttribute("data-import"))
       $<HTMLInputElement>("#fileInput").click();
-    else if (b.dataset.open) openEntry(b.dataset.open);
-    else if (b.dataset.info) showDetails(b.dataset.info);
+    else if (b.dataset.launch) openEntry(b.dataset.launch);
+    else if (b.dataset.open) {
+      if (ui.space === "personal") openEntry(b.dataset.open);
+      else openProject(b.dataset.open);
+    } else if (b.dataset.info) showDetails(b.dataset.info);
     else if (b.dataset.edit) editDialog(b.dataset.edit);
     else if (b.dataset.delete) deleteDialog(b.dataset.delete);
     else if (b.hasAttribute("data-close-details")) {
@@ -225,30 +228,52 @@ export function bindEvents() {
     }
   });
   let dragDepth = 0;
+  const clearGhosts = () =>
+    $$(".ghost-slot.drag-over").forEach((slot) =>
+      slot.classList.remove("drag-over"),
+    );
+  const canDrop = () => ready && !busy && !$<HTMLDialogElement>("#dialog").open;
   document.addEventListener("dragenter", (e) => {
-    if (e.dataTransfer?.types.includes("Files")) {
-      e.preventDefault();
-      if (!busy && !$<HTMLDialogElement>("#dialog").open) {
-        dragDepth++;
-        $("#dropOverlay").hidden = false;
-      }
-    }
+    if (!e.dataTransfer?.types.includes("Files") || !canDrop()) return;
+    e.preventDefault();
+    dragDepth++;
+    // Keep empty-state targets visible instead of covering them with the global overlay.
+    $("#dropOverlay").hidden = !!find(".ghost-slots");
   });
   document.addEventListener("dragover", (e) => {
-    if (e.dataTransfer?.types.includes("Files")) e.preventDefault();
+    if (!e.dataTransfer?.types.includes("Files") || !canDrop()) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    const slot =
+      e.target instanceof Element ? e.target.closest(".ghost-slot") : null;
+    clearGhosts();
+    slot?.classList.add("drag-over");
   });
-  document.addEventListener("dragleave", () => {
+  document.addEventListener("dragleave", (e) => {
+    const slot =
+      e.target instanceof Element ? e.target.closest(".ghost-slot") : null;
+    if (
+      slot &&
+      !(e.relatedTarget instanceof Node && slot.contains(e.relatedTarget))
+    )
+      slot.classList.remove("drag-over");
     if (--dragDepth <= 0) {
       dragDepth = 0;
       $("#dropOverlay").hidden = true;
+      clearGhosts();
     }
+  });
+  document.addEventListener("dragend", () => {
+    dragDepth = 0;
+    $("#dropOverlay").hidden = true;
+    clearGhosts();
   });
   document.addEventListener("drop", (e) => {
     e.preventDefault();
     dragDepth = 0;
     $("#dropOverlay").hidden = true;
-    if (!$<HTMLDialogElement>("#dialog").open)
-      importFiles([...(e.dataTransfer?.files || [])]);
+    clearGhosts();
+    if (canDrop()) importFiles([...(e.dataTransfer?.files || [])]);
   });
   $("#searchIcon").innerHTML = icon("search");
   $<HTMLButtonElement>("#menuBtn").innerHTML = icon("menu");

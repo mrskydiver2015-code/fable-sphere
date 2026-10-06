@@ -24,6 +24,7 @@ export interface LibraryEntry {
   thumbnail?: string | null;
   legacy?: boolean;
   demoArt?: boolean;
+  demoUrl?: string;
   text?: string;
 }
 export interface StoredFile {

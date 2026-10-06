@@ -594,3 +594,53 @@
 .landscape-wall .card-info {
   bottom: 6px;
 }
+
+.ghost-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: min(440px, 100%);
+  margin-top: 12px;
+}
+.ghost-slot {
+  aspect-ratio: 1.6;
+  border: 1px dashed #a9baac55;
+  border-radius: 10px;
+  background: #b9d8c304;
+  color: #9eafa1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 10px;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.ghost-slot:hover,
+.ghost-slot:focus-visible,
+.ghost-slot.drag-over {
+  background: #e7af7815;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+@media (max-height: 520px) {
+  .empty {
+    padding: 12px;
+    gap: 8px;
+  }
+  .empty .empty-orbit {
+    display: none;
+  }
+  .empty h2 {
+    font-size: 25px;
+  }
+  .empty .actions,
+  .ghost-slots {
+    margin-top: 4px;
+  }
+  .ghost-slots {
+    width: min(360px, 100%);
+  }
+}
