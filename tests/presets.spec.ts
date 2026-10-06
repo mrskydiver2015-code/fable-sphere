@@ -92,6 +92,35 @@ for (const viewport of [
       const stage = document.querySelector("#stage")!.getBoundingClientRect();
       const matrix = new DOMMatrix(getComputedStyle(camera).transform);
       return {
+        truncatedLabels: [
+          ...document.querySelectorAll<HTMLElement>(
+            ".card-title, .card-category",
+          ),
+        ]
+          .filter(
+            (label) =>
+              label.scrollHeight > label.clientHeight + 1 ||
+              label.scrollWidth > label.clientWidth + 1,
+          )
+          .map((label) => label.textContent),
+        cameraWidth: camera.getBoundingClientRect().width,
+        cardBounds: [
+          ...document.querySelectorAll<HTMLElement>(".spatial .card"),
+        ]
+          .filter((card) => getComputedStyle(card).visibility === "visible")
+          .map((card) => {
+            const rect = card.getBoundingClientRect();
+            return {
+              left: rect.left,
+              right: rect.right,
+              top: rect.top,
+              bottom: rect.bottom,
+            };
+          }),
+        stageTop: stage.top,
+        stageBottom: stage.bottom,
+        touchAction: getComputedStyle(document.querySelector(".spatial")!)
+          .touchAction,
         toolbar: document.querySelector(".topbar")!.getBoundingClientRect()
           .height,
         width: stage.width,
@@ -106,6 +135,21 @@ for (const viewport of [
     expect(geometry.toolbar).toBeLessThanOrEqual(42);
     expect(geometry.width).toBe(viewport.width);
     expect(geometry.left).toBe(0);
+    expect(geometry.cameraWidth).toBeGreaterThanOrEqual(viewport.width);
+    expect(
+      Math.min(...geometry.cardBounds.map((rect) => rect.left)),
+    ).toBeLessThanOrEqual(0);
+    expect(
+      Math.max(...geometry.cardBounds.map((rect) => rect.right)),
+    ).toBeGreaterThanOrEqual(viewport.width);
+    expect(
+      Math.min(...geometry.cardBounds.map((rect) => rect.top)),
+    ).toBeGreaterThanOrEqual(geometry.stageTop);
+    expect(
+      Math.max(...geometry.cardBounds.map((rect) => rect.bottom)),
+    ).toBeLessThanOrEqual(geometry.stageBottom);
+    expect(geometry.touchAction).toBe("none");
+    expect(geometry.truncatedLabels).toEqual([]);
     expect(geometry.scaleX).toBeGreaterThan(0.5);
     expect(geometry.scaleX).toBeLessThan(1);
     expect(geometry.scaleX).toBe(geometry.scaleY);
@@ -115,6 +159,25 @@ for (const viewport of [
     await page.screenshot({
       path: testInfo.outputPath("showcase-landscape.png"),
     });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page
+      .locator('.wall .card[aria-hidden="false"] .card-open')
+      .first()
+      .focus();
+    await page.keyboard.press("End");
+    await expect(page.locator("#nextBtn")).toBeDisabled();
+    const lastRight = await page
+      .locator(".spatial .card")
+      .evaluateAll((cards) =>
+        Math.max(
+          ...cards
+            .filter((card) => getComputedStyle(card).visibility === "visible")
+            .map((card) => card.getBoundingClientRect().right),
+        ),
+      );
+    expect(lastRight).toBeGreaterThanOrEqual(viewport.width);
+    await page.keyboard.press("Home");
+    await expect(page.locator("#prevBtn")).toBeDisabled();
     await page.locator("#menuBtn").click();
     await expect(page.locator(".mobile-nav")).toBeVisible();
     await page.keyboard.press("Escape");

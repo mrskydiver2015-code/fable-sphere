@@ -18,6 +18,7 @@ export class SpatialGallery {
   rows: number = CYLINDER.rows;
   curve: number = CYLINDER.curve;
   cols = 1;
+  private viewColumns = 1;
   gap = 0;
   cw = 0;
   ch = 0;
@@ -285,8 +286,9 @@ export class SpatialGallery {
     let w = physicalWidth,
       h = physicalHeight;
     this.scale = 1;
+    let landscapeSpan: number | undefined;
     if (landscape) {
-      // Lay out a complete, readable six-column scene, then scale the camera as one unit.
+      // Fit four proportional rows, then extend the scene past both screen edges.
       w =
         CYLINDER.columns * CYLINDER.cardWidth +
         (CYLINDER.columns - 1) * CYLINDER.gap;
@@ -299,7 +301,25 @@ export class SpatialGallery {
         (physicalWidth - 8) / w,
         (physicalHeight - 8) / h,
       );
-      this.cols = CYLINDER.columns;
+      // Compensate for the uniform scale and the inward projection's horizontal
+      // contraction. Overscan keeps the curved wall crossing the viewport edges.
+      w = (physicalWidth / this.scale) * 1.24;
+      const perspective = CYLINDER.perspective * (w / 1108);
+      // Place the first/last column across the screen edge, but keep its
+      // centre hit-testable. Fractional travel avoids rounding into side gaps.
+      const edge = physicalWidth / (2 * this.scale) - this.cw * 0.12;
+      let low = 0;
+      let high = w / 2;
+      for (let i = 0; i < 24; i++) {
+        const x = (low + high) / 2;
+        const projected = projectCylinder(x, w, this.curve);
+        const screenX =
+          (projected.x * perspective) / (perspective - projected.z);
+        if (screenX < edge) low = x;
+        else high = x;
+      }
+      landscapeSpan = 1 + (low + high) / (this.cw + this.gap);
+      this.cols = Math.ceil(landscapeSpan);
     } else {
       this.gap = w < 540 ? 6 : CYLINDER.gap;
       const desiredColumns = w < 420 ? 3 : w < 540 ? 4 : CYLINDER.columns;
@@ -320,19 +340,27 @@ export class SpatialGallery {
         Math.min(10, Math.floor((w + this.gap) / (this.cw + this.gap))),
       );
     }
+    this.viewColumns = landscapeSpan ?? this.cols;
     this.width = w;
     if (this.camera) {
+      this.camera.style.perspective = `${
+        landscape ? CYLINDER.perspective * (w / 1108) : CYLINDER.perspective
+      }px`;
       this.camera.style.width = `${w}px`;
       this.camera.style.height = `${h}px`;
       this.camera.style.transform = `translate(-50%, -50%) scale(${this.scale})`;
     }
-    this.offset = (w - (this.cols * this.cw + (this.cols - 1) * this.gap)) / 2;
+    this.offset =
+      (w -
+        ((landscapeSpan ?? this.cols) * this.cw +
+          ((landscapeSpan ?? this.cols) - 1) * this.gap)) /
+      2;
     this.viewport.classList.toggle("landscape-wall", landscape);
     this.viewport.classList.toggle("compact-wall", !landscape && this.ch < 110);
     this.stride = this.cw + this.gap;
     this.max = Math.max(
       0,
-      Math.ceil(this.cards.length / this.rows) - this.cols,
+      Math.ceil(this.cards.length / this.rows) - (landscapeSpan ?? this.cols),
     );
     this.position.index = Math.max(0, Math.min(this.max, this.position.index));
     this.pos = this.target = this.position.index * this.stride;
@@ -457,7 +485,7 @@ export class SpatialGallery {
   reveal(index: number) {
     const column = Math.floor(index / this.rows);
     if (column < this.position.index) this.snap(column, true);
-    else if (column >= this.position.index + this.cols)
-      this.snap(column - this.cols + 1, true);
+    else if (column > this.position.index + this.viewColumns - 1)
+      this.snap(column - this.viewColumns + 1, true);
   }
 }

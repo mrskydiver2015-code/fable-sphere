@@ -10,7 +10,7 @@ function cardMarkup(e: LibraryEntry) {
     ? e.headerColor
     : "#64748b";
   const header = e.category
-    ? `<span class="card-category" style="--category-color:${color}">${escapeHTML(e.category)} · ${escapeHTML(itemType(e))}</span>`
+    ? `<span class="card-category" style="--category-color:${color}">${escapeHTML(e.category)}<span class="card-category-type"> · ${escapeHTML(itemType(e))}</span></span>`
     : "";
   return `<article class="card ${ui.selected === e.id ? "selected" : ""}" data-card="${escapeHTML(e.id)}"><button class="card-open" data-open="${escapeHTML(e.id)}" aria-label="Open ${escapeHTML(e.name)}">${header}<div class="card-art"><img src="${cover(e)}" alt="" draggable="false"><span class="art-label">${e.kind === "folder" ? "Curated collection" : escapeHTML(itemType(e))}</span>${e.kind === "folder" ? `<span class="folder-stack">${icon("folder")}${children(e.id).length}</span>` : ""}</div><div class="card-caption"><span class="card-title">${escapeHTML(e.name)}</span><span class="card-meta">${
     ui.query

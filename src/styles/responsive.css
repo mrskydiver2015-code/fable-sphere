@@ -289,7 +289,9 @@
     display: none;
   }
   .spatial {
+    width: 100vw;
     max-width: none;
+    margin-inline: 0;
   }
   .footer {
     height: 28px;

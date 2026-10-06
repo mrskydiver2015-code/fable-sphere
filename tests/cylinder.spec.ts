@@ -182,7 +182,7 @@ for (const size of [
       expect(layout.width).toBe(size.width);
       expect(layout.rows).toBe(size.rows);
       expect(layout.inside).toBe(true);
-      expect(layout.visibleCount).toBeLessThan(40);
+      expect(layout.visibleCount).toBeLessThan(size.height <= 520 ? 52 : 40);
     };
     await assertViewport();
     await page.screenshot({ path: testInfo.outputPath("wall.png") });

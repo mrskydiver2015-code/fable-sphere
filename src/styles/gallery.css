@@ -575,23 +575,28 @@
   transform-origin: 50% 50%;
   pointer-events: none;
 }
-.landscape-wall .card-caption {
+.spatial.landscape-wall .card-caption {
   height: 40px;
   padding: 4px 6px;
 }
-.landscape-wall .card-title {
+.spatial.landscape-wall .card-title {
   font-size: 14px;
   line-height: 16px;
   white-space: normal;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
-.landscape-wall .card-meta,
-.landscape-wall .art-label {
+.spatial.landscape-wall .card-category-type {
   display: none;
 }
-.landscape-wall .card-info {
+.spatial.landscape-wall .card-meta,
+.spatial.landscape-wall .art-label {
+  display: none;
+}
+.spatial.landscape-wall .card-info {
+  right: 14px;
   bottom: 6px;
 }
 

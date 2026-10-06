@@ -61,7 +61,8 @@ Portrait phones show three columns below 420 px and four on wider phones, with
 6 px gaps. Four rows always stay inside `100dvh`. At heights of 520 px or less
 (and on coarse-pointer landscape tablets up to 1100 px wide), the sidebar becomes
 a hamburger drawer and every top control shares one 40 px toolbar. The full
-six-column camera is uniformly scaled to fit the stage; its cards retain a 16:10
+camera is uniformly scaled to fit four rows, with a viewport-derived width and
+perspective that extend the curved wall past both screen edges. Its cards retain a 16:10
 landscape ratio and two-line titles. Desktop calibration is unchanged. Cards travel
 along an inward-facing arc with depth,
 tangent rotation and fading edge slivers; navigation and inspection stay flat.
