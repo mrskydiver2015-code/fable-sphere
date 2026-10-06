@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
     <meta name="theme-color" content="#151b1b" />
     <link
       rel="icon"
@@ -62,42 +65,53 @@
               <span class="demo-state" id="demoState">On</span></span
             ><span class="switch-track" aria-hidden="true"></span>
           </button>
-        </header>
-        <section class="page-head">
-          <nav
-            class="breadcrumbs"
-            id="breadcrumbs"
-            aria-label="Breadcrumb"
-          ></nav>
-          <div class="heading-row">
-            <div>
-              <div class="eyebrow" id="eyebrow">
-                Your imagination, collected
-              </div>
-              <h1 id="pageTitle">A world of your own.</h1>
-              <p class="description" id="pageDescription">
-                Places for your stories, discoveries, and things worth keeping.
-              </p>
-            </div>
-            <div class="head-actions">
-              <button class="btn" id="newFolderBtn"></button
-              ><button class="btn primary" id="importBtn"></button
-              ><input id="fileInput" type="file" multiple hidden />
-            </div>
+          <div class="head-actions">
+            <button
+              class="btn"
+              id="newFolderBtn"
+              aria-label="New collection"
+            ></button
+            ><button
+              class="btn primary"
+              id="importBtn"
+              aria-label="Import files"
+            ></button
+            ><input id="fileInput" type="file" multiple hidden />
           </div>
-        </section>
-        <div class="toolbar">
-          <div class="filters" id="filters" aria-label="Filter content"></div>
-          <select id="sortSelect" class="sort" aria-label="Sort library">
-            <option value="curated">Curated order</option>
-            <option value="name">Name A–Z</option>
-            <option value="recent">Newest first</option>
-          </select>
-          <div class="view-controls" aria-label="Gallery view">
-            <button data-view="swipe" aria-label="SWIPE view">
-              <span>SWIPE</span></button
-            ><button data-view="grid" aria-label="Grid view"></button
-            ><button data-view="list" aria-label="List view"></button>
+        </header>
+        <div class="browsebar">
+          <section class="page-head">
+            <nav
+              class="breadcrumbs"
+              id="breadcrumbs"
+              aria-label="Breadcrumb"
+            ></nav>
+            <div class="heading-row">
+              <div>
+                <div class="eyebrow" id="eyebrow">
+                  Your imagination, collected
+                </div>
+                <h1 id="pageTitle">A world of your own.</h1>
+                <p class="description" id="pageDescription">
+                  Places for your stories, discoveries, and things worth
+                  keeping.
+                </p>
+              </div>
+            </div>
+          </section>
+          <div class="toolbar">
+            <div class="filters" id="filters" aria-label="Filter content"></div>
+            <select id="sortSelect" class="sort" aria-label="Sort library">
+              <option value="curated">Curated order</option>
+              <option value="name">Name A–Z</option>
+              <option value="recent">Newest first</option>
+            </select>
+            <div class="view-controls" aria-label="Gallery view">
+              <button data-view="swipe" aria-label="SWIPE view">
+                <span>SWIPE</span></button
+              ><button data-view="grid" aria-label="Grid view"></button
+              ><button data-view="list" aria-label="List view"></button>
+            </div>
           </div>
         </div>
         <div class="stage" id="stage">

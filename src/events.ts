@@ -251,9 +251,9 @@ export function bindEvents() {
   $("#searchIcon").innerHTML = icon("search");
   $<HTMLButtonElement>("#menuBtn").innerHTML = icon("menu");
   $<HTMLButtonElement>("#newFolderBtn").innerHTML =
-    icon("plus") + " New collection";
+    icon("plus") + '<span class="action-label">New collection</span>';
   $<HTMLButtonElement>("#importBtn").innerHTML =
-    icon("upload") + " Import files";
+    icon("upload") + '<span class="action-label">Import files</span>';
   $<HTMLButtonElement>("#prevBtn").innerHTML = icon("left");
   $<HTMLButtonElement>("#nextBtn").innerHTML = icon("right");
   $("[data-view=swipe]").insertAdjacentHTML("afterbegin", icon("sphere"));

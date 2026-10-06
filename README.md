@@ -57,13 +57,30 @@ SWIPE uses the original QA calibration in `src/spatial/cylinder.ts`: curvature
 1.00 and edge resistance 0.30. CSS camera perspective is 1100 px; the QA `proj`
 value describes momentum, not that camera distance. The matrix has **four fixed rows**,
 178 × 128 px cards, 8 px gaps and six columns at its centred 1108 px maximum width.
-Narrow screens show fewer columns; short screens compress card height to keep all
-four rows inside `100dvh`. Cards travel along an inward-facing arc with depth,
+Portrait phones show three columns below 420 px and four on wider phones, with
+6 px gaps. Both card dimensions scale together to preserve the 178:128 aspect
+ratio, including landscape; four rows always stay inside `100dvh`. Short landscape
+screens can show additional columns. Cards travel along an inward-facing arc with depth,
 tangent rotation and fading edge slivers; navigation and inspection stay flat.
 The critically damped spring is solved analytically for consistent 60/120 Hz motion.
 Only visible columns and edge overscan are updated during animation. The footer
 **QA** toggle exposes live geometry, a curve slider and calibration reset; it does
 not run an idle animation loop. Tuning is session-only.
+
+The compact search/action row, breadcrumb/title strip and filters leave at least
+74% of viewport height to the gallery in the tested 320–1440 px layouts. On
+landscape phones the breadcrumbs and filters share a row. Grid cards use a dense
+145 px desktop minimum and three/four columns on portrait phones, with full
+accessible titles and two-line mobile captions. Safe-area padding and a 16 px
+search field accommodate iOS display cutouts and avoid focus zoom.
+
+The cylinder uses `touch-action: pan-x pan-y`. Mouse/pen use pointer capture;
+single-finger horizontal touch uses a non-passive touchmove handler so browser
+panning does not cancel the custom swipe. Vertical intent and multi-touch remain
+with the browser. Responsive tests cover real Chromium touch input, orientation
+changes, viewport allocation and aspect ratios. Safari/WebKit was not run in the
+implementation environment because its browser download was blocked by network
+policy; Chromium mobile emulation is not a substitute for a physical iOS check.
 
 The default Demo Space restores all **153 original QA mock items** from 24
 colour-coded categories, including templates, reports, documents, images and

@@ -30,6 +30,7 @@ export class SpatialGallery {
   drag: {
     id: number;
     start: number;
+    startY: number;
     x: number;
     time: number;
     moved: boolean;
@@ -84,93 +85,159 @@ export class SpatialGallery {
     this.observer.observe(this.viewport);
     const wall = this.wall;
     const surface = this.viewport;
+    const begin = (id: number, x: number, y: number) => {
+      cancelAnimationFrame(this.raf);
+      this.raf = 0;
+      this.velocity = 0;
+      clearTimeout(this.wheelTimer);
+      this.drag = {
+        id,
+        start: x,
+        startY: y,
+        x,
+        time: performance.now(),
+        moved: false,
+        samples: [[performance.now(), x]],
+      };
+    };
+    const move = (x: number) => {
+      const d = this.drag;
+      if (!d) return;
+      if (Math.abs(x - d.start) > 7) d.moved = true;
+      if (!d.moved) return;
+      const delta = (x - d.x) * CYLINDER.dragSensitivity,
+        now = performance.now();
+      wall.classList.add("dragging");
+      const resistance =
+        this.pos < 0 || this.pos > this.max * this.stride ? CYLINDER.rubber : 1;
+      this.pos = Math.max(
+        -this.stride * 0.8,
+        Math.min(
+          this.max * this.stride + this.stride * 0.8,
+          this.pos - delta * resistance,
+        ),
+      );
+      d.samples.push([now, x]);
+      while (d.samples.length > 2 && now - d.samples[0][0] > 90)
+        d.samples.shift();
+      const [startTime, startX] = d.samples[0];
+      this.velocity =
+        now > startTime
+          ? (-(x - startX) * CYLINDER.dragSensitivity) / (now - startTime)
+          : 0;
+      d.x = x;
+      d.time = now;
+      this.queueApply();
+    };
+    const finish = (cancelled = false) => {
+      const d = this.drag;
+      if (!d) return;
+      this.drag = null;
+      wall.classList.remove("dragging");
+      if (d.moved) {
+        this.suppressUntil = performance.now() + 350;
+        if (cancelled || performance.now() - d.time > 100) this.velocity = 0;
+        this.snap(projectedColumn(this.pos, this.velocity, this.stride));
+      }
+    };
     surface.addEventListener(
       "pointerdown",
       (e) => {
+        // Touch has its own non-passive path: Safari otherwise cancels pointers
+        // when native panning begins with touch-action: pan-x pan-y.
         if (
-          this.drag !== null ||
+          e.pointerType === "touch" ||
+          this.drag ||
           e.button !== 0 ||
           (e.target instanceof Element && e.target.closest(".card-info"))
         )
           return;
-        cancelAnimationFrame(this.raf);
-        this.raf = 0;
-        this.velocity = 0;
-        clearTimeout(this.wheelTimer);
-        this.drag = {
-          id: e.pointerId,
-          start: e.clientX,
-          x: e.clientX,
-          time: performance.now(),
-          moved: false,
-          samples: [[performance.now(), e.clientX]],
-        };
+        begin(e.pointerId, e.clientX, e.clientY);
       },
       options,
     );
     surface.addEventListener(
       "pointermove",
       (e) => {
-        const d = this.drag;
-        if (!d || d.id !== e.pointerId) return;
-        const delta = (e.clientX - d.x) * CYLINDER.dragSensitivity,
-          now = performance.now();
-        if (Math.abs(e.clientX - d.start) > 7) d.moved = true;
-        if (!d.moved) return;
-        surface.setPointerCapture(e.pointerId);
-        wall.classList.add("dragging");
-        const resistance =
-          this.pos < 0 || this.pos > this.max * this.stride
-            ? CYLINDER.rubber
-            : 1;
-        this.pos = Math.max(
-          -this.stride * 0.8,
-          Math.min(
-            this.max * this.stride + this.stride * 0.8,
-            this.pos - delta * resistance,
-          ),
-        );
-        d.samples.push([now, e.clientX]);
-        while (d.samples.length > 2 && now - d.samples[0][0] > 90)
-          d.samples.shift();
-        const [startTime, startX] = d.samples[0];
-        this.velocity =
-          now > startTime
-            ? (-(e.clientX - startX) * CYLINDER.dragSensitivity) /
-              (now - startTime)
-            : 0;
-        d.x = e.clientX;
-        d.time = now;
-        this.queueApply();
+        if (e.pointerType === "touch" || this.drag?.id !== e.pointerId) return;
+        move(e.clientX);
+        if (this.drag?.moved) surface.setPointerCapture(e.pointerId);
       },
       options,
     );
-    const finish = (e: PointerEvent) => {
-      const d = this.drag;
-      if (!d || d.id !== e.pointerId) return;
-      this.drag = null;
-      wall.classList.remove("dragging");
-      if (d.moved) {
-        this.suppressUntil = performance.now() + 250;
-        if (performance.now() - d.time > 100) this.velocity = 0;
-        if (e.type !== "pointerup") this.velocity = 0;
-        this.snap(projectedColumn(this.pos, this.velocity, this.stride));
-        try {
-          surface.releasePointerCapture(e.pointerId);
-        } catch {}
-      }
+    const finishPointer = (e: PointerEvent) => {
+      if (e.pointerType === "touch" || this.drag?.id !== e.pointerId) return;
+      finish(e.type !== "pointerup");
+      if (surface.hasPointerCapture(e.pointerId))
+        surface.releasePointerCapture(e.pointerId);
     };
-    surface.addEventListener("pointerup", finish, options);
-    surface.addEventListener("pointercancel", finish, options);
+    surface.addEventListener("pointerup", finishPointer, options);
+    surface.addEventListener("pointercancel", finishPointer, options);
     surface.addEventListener(
       "lostpointercapture",
       (e) => {
-        // Touch transfers implicit capture from a card to the viewport.
-        // Ignore the bubbled loss from that card during the handoff.
-        if (e.target === surface && this.drag) finish(e);
+        if (e.target === surface) finishPointer(e);
       },
       options,
     );
+    surface.addEventListener(
+      "touchstart",
+      (e) => {
+        if (e.touches.length !== 1) {
+          finish(true);
+          return;
+        }
+        if (
+          this.drag ||
+          (e.target instanceof Element && e.target.closest(".card-info"))
+        )
+          return;
+        const touch = e.touches[0];
+        begin(touch.identifier, touch.clientX, touch.clientY);
+      },
+      { ...options, passive: true },
+    );
+    surface.addEventListener(
+      "touchmove",
+      (e) => {
+        const d = this.drag;
+        if (!d) return;
+        if (e.touches.length !== 1) {
+          finish(true);
+          return;
+        }
+        const touch = e.touches[0];
+        if (touch.identifier !== d.id) return;
+        const dx = Math.abs(touch.clientX - d.start),
+          dy = Math.abs(touch.clientY - d.startY);
+        if (!d.moved && dy > dx && dy > 7) {
+          finish(true);
+          return;
+        }
+        if (!d.moved && dx <= 7) return;
+        if (!e.cancelable) {
+          finish(true);
+          return;
+        }
+        e.preventDefault();
+        move(touch.clientX);
+      },
+      { ...options, passive: false },
+    );
+    surface.addEventListener(
+      "touchend",
+      (e) => {
+        if (
+          this.drag &&
+          [...e.changedTouches].some(
+            (touch) => touch.identifier === this.drag?.id,
+          )
+        )
+          finish();
+      },
+      options,
+    );
+    surface.addEventListener("touchcancel", () => finish(true), options);
     surface.addEventListener(
       "wheel",
       (e) => {
@@ -208,23 +275,25 @@ export class SpatialGallery {
     const w = this.viewport.clientWidth,
       h = this.viewport.clientHeight;
     this.width = w;
-    // Fixed four-row QA matrix; smaller screens show fewer columns, never fewer rows.
+    // Scale both axes together, keeping the QA aspect ratio in every orientation.
     this.rows = CYLINDER.rows;
-    this.gap = CYLINDER.gap;
-    this.cw = Math.min(CYLINDER.cardWidth, w);
-    this.ch = Math.max(
-      1,
+    this.gap = w < 540 ? 6 : CYLINDER.gap;
+    const desiredColumns = w < 420 ? 3 : w < 540 ? 4 : CYLINDER.columns;
+    const scale = Math.max(
+      0.1,
       Math.min(
-        CYLINDER.cardHeight,
-        (h - 24 - (this.rows - 1) * this.gap) / this.rows,
+        1,
+        (w - (w < 540 ? 12 : 0) - (desiredColumns - 1) * this.gap) /
+          (desiredColumns * CYLINDER.cardWidth),
+        (h - 24 - (this.rows - 1) * this.gap) /
+          (this.rows * CYLINDER.cardHeight),
       ),
     );
+    this.cw = CYLINDER.cardWidth * scale;
+    this.ch = CYLINDER.cardHeight * scale;
     this.cols = Math.max(
       1,
-      Math.min(
-        CYLINDER.columns,
-        Math.floor((w + this.gap) / (this.cw + this.gap)),
-      ),
+      Math.min(10, Math.floor((w + this.gap) / (this.cw + this.gap))),
     );
     this.offset = (w - (this.cols * this.cw + (this.cols - 1) * this.gap)) / 2;
     this.viewport.classList.toggle("compact-wall", this.ch < 110);

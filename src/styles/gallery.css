@@ -17,13 +17,13 @@
   min-width: 0;
   position: relative;
   overflow: auto;
-  padding: 9px 36px 25px;
+  padding: 6px 16px 12px;
   scrollbar-width: thin;
 }
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 8px;
 }
 .card {
   border: 1px solid #ffffff0b;
@@ -160,7 +160,8 @@
   padding: 0;
   perspective: 1100px;
   perspective-origin: 50% 50%;
-  touch-action: none;
+  touch-action: pan-x pan-y;
+  -webkit-user-select: none;
   user-select: none;
 }
 .spatial .wall {
@@ -234,8 +235,9 @@
 }
 .footer {
   flex: none;
-  margin: 0 36px;
-  padding: 16px 0 20px;
+  margin: 0 16px;
+  height: 32px;
+  padding: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -255,7 +257,7 @@
 .spatial-controls {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 8px;
 }
 .spatial-controls .icon-btn {
   height: 28px;
@@ -359,7 +361,7 @@
 .list-name {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 8px;
   text-align: left;
 }
 .list-name img {
@@ -389,7 +391,7 @@
   flex-direction: column;
   text-align: center;
   padding: 25px;
-  gap: 13px;
+  gap: 8px;
 }
 .empty .empty-orbit {
   width: 66px;
@@ -505,15 +507,63 @@
   font: 11px/1.7 monospace;
   margin-bottom: 10px;
 }
-@media (max-width: 540px) {
-  .footer {
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  .footer-left {
-    flex: 1 0 100%;
-  }
-  .spatial-controls {
-    flex: 1;
-  }
+
+.qa-controls > .btn {
+  height: 26px;
+  padding: 2px 8px;
+}
+.gallery-grid .card {
+  aspect-ratio: 178 / 148;
+  border-radius: 8px;
+}
+.gallery-grid .card-art {
+  min-height: 0;
+  height: auto;
+}
+.gallery-grid .card-caption {
+  height: 42px;
+  padding: 5px 7px;
+}
+.gallery-grid .card-title {
+  font-size: 13px;
+}
+.gallery-grid .card-meta {
+  font-size: 9px;
+  margin-top: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gallery-grid .card-info {
+  right: 3px;
+  bottom: 14px;
+}
+.gallery-grid .art-label,
+.gallery-grid .folder-stack {
+  display: none;
+}
+.gallery-grid .card-category {
+  padding: 1px 6px;
+  font-size: 9px;
+}
+.spatial.compact-wall .card-caption {
+  height: 26px;
+  padding: 4px;
+}
+.spatial.compact-wall .card-title {
+  font:
+    11px/16px -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  padding-right: 19px;
+}
+.spatial.compact-wall .card-info {
+  bottom: 1px;
+  right: 1px;
+}
+.spatial.compact-wall .card-category {
+  height: 5px;
+  padding: 0;
+  font-size: 0;
 }
