@@ -13,8 +13,8 @@ for (const viewport of [
     page,
   }, testInfo) => {
     await page.setViewportSize(viewport);
-    await page.goto("/");
-    await expect(page.locator("#demoToggle")).toBeEnabled();
+    await page.goto("/#space=demo");
+    await expect(page.locator("#datasetPreset")).toBeEnabled();
     const layout = await page.evaluate(() => {
       const stage = document.querySelector("#stage")!.getBoundingClientRect();
       const cards = [
@@ -39,13 +39,16 @@ for (const viewport of [
     expect(layout.fraction).toBeGreaterThanOrEqual(0.74);
     expect(layout.pageHeight).toBe(viewport.height);
     expect(layout.pageWidth).toBe(viewport.width);
-    expect(layout.ratio).toBeCloseTo(178 / 128, 4);
+    expect(layout.ratio).toBeCloseTo(
+      viewport.height <= 520 ? 1.6 : 178 / 128,
+      4,
+    );
     expect(layout.rows).toBe(4);
     expect(layout.columns).toBeGreaterThanOrEqual(
       viewport.width >= 420 ? 4 : 3,
     );
     expect(layout.searchFont).toBe("16px");
-    expect(layout.touchAction).toBe("pan-x pan-y");
+    expect(layout.touchAction).toBe("none");
     await page.screenshot({ path: testInfo.outputPath("swipe.png") });
     await page.getByRole("button", { name: "Grid view", exact: true }).click();
     const grid = await page.locator(".gallery-grid").evaluate((node) => ({
@@ -65,7 +68,11 @@ for (const viewport of [
       .getByRole("button", { name: "Details for Chronicles", exact: true })
       .click();
     await expect(
-      page.locator(viewport.width > 850 ? "#inspector" : "#dialog"),
+      page.locator(
+        viewport.width > 850 && viewport.height > 520
+          ? "#inspector"
+          : "#dialog",
+      ),
     ).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollHeight),
@@ -82,8 +89,8 @@ test("orientation change preserves aspect, position and horizontal touch intent"
     hasTouch: true,
   });
   const page = await context.newPage();
-  await page.goto("/");
-  await expect(page.locator("#demoToggle")).toBeEnabled();
+  await page.goto("/#space=demo");
+  await expect(page.locator("#datasetPreset")).toBeEnabled();
   const client = await context.newCDPSession(page);
   const surface = (await page.locator(".spatial").boundingBox())!;
   const x = 300,
@@ -134,7 +141,7 @@ test("orientation change preserves aspect, position and horizontal touch intent"
             parseFloat((node as HTMLElement).style.height),
         ),
     )
-    .toBeCloseTo(178 / 128, 4);
+    .toBeCloseTo(1.6, 4);
   await expect(page.locator("#prevBtn")).toBeEnabled();
   await context.close();
 });

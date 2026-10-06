@@ -19,9 +19,9 @@ fs.mkdirSync(out, { recursive: true });
     const p = await context.newPage(),
       errors = [];
     p.on("pageerror", (e) => errors.push(e.message));
-    await p.goto(origin);
+    await p.goto(origin + "/#space=demo");
     await p.waitForFunction(
-      () => !document.querySelector("#demoToggle").disabled,
+      () => !document.querySelector("#datasetPreset").disabled,
     );
     const titleBeforeDrag = await p.locator("h1").innerText();
     // Mouse drag moves wall and does not accidentally enter a folder.
@@ -44,9 +44,9 @@ fs.mkdirSync(out, { recursive: true });
     await p.screenshot({ path: out + "/inspector.png" });
     await p.locator("#inspector [data-close-details]").click();
     // PDF original, native viewer, audio element, and offline stored reads.
-    await p.locator("#demoToggle").click();
+    await p.locator("#datasetPreset").selectOption("empty");
     await p.waitForFunction(
-      () => !document.querySelector("#demoToggle").disabled,
+      () => !document.querySelector("#datasetPreset").disabled,
     );
     const bytes = fs.readFileSync(path.join(__dirname, "fixtures/story.pdf"));
     const wav = Buffer.alloc(48);
@@ -72,7 +72,7 @@ fs.mkdirSync(out, { recursive: true });
     ]);
     await p.waitForFunction(
       () =>
-        !document.querySelector("#demoToggle").disabled &&
+        !document.querySelector("#datasetPreset").disabled &&
         document.querySelectorAll("[data-card]").length === 2,
     );
     await context.setOffline(true);
@@ -106,9 +106,9 @@ fs.mkdirSync(out, { recursive: true });
     );
     await context.setOffline(false);
     await p.setViewportSize({ width: 320, height: 568 });
-    await p.locator("#demoToggle").click();
+    await p.locator("#datasetPreset").selectOption("classic");
     await p.waitForFunction(
-      () => !document.querySelector("#demoToggle").disabled,
+      () => !document.querySelector("#datasetPreset").disabled,
     );
     await p.screenshot({ path: out + "/small.png" });
     assert.ok(await p.evaluate(() => document.body.scrollWidth <= innerWidth));
@@ -120,9 +120,9 @@ fs.mkdirSync(out, { recursive: true });
       hasTouch: true,
     });
     const t = await touch.newPage();
-    await t.goto(origin);
+    await t.goto(origin + "/#space=demo");
     await t.waitForFunction(
-      () => !document.querySelector("#demoToggle").disabled,
+      () => !document.querySelector("#datasetPreset").disabled,
     );
     const touchTitle = await t.locator("h1").innerText();
     const client = await touch.newCDPSession(t);

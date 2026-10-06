@@ -1,4 +1,5 @@
 import { storage, keyFor } from "./storage";
+import { makeShowcase } from "../data/showcase";
 import { makeMatrixDemo } from "../data/matrixDemo";
 import { makeDemo } from "../data/demo";
 import type { LibraryEntry } from "./types";
@@ -78,6 +79,15 @@ export async function initializeData(): Promise<{
   migrated: number;
   warning?: string;
 }> {
+  if (!(await storage.read("meta", "showcase-v1"))) {
+    const keys = new Set(
+      (await storage.read("entries")).map((entry) => entry.key),
+    );
+    await storage.commit({
+      put: makeShowcase().filter((entry) => !keys.has(entry.key)),
+      meta: [{ key: "showcase-v1", value: true }],
+    });
+  }
   if (await storage.read("meta", "initialized-v2")) {
     if (!(await storage.read("meta", "matrix-demo-v1"))) {
       const existing = await storage.read("entries");

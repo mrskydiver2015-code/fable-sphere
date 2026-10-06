@@ -1,4 +1,4 @@
-import { isView, isFilter, isSort } from "./core/types";
+import { isView, isFilter, isSort, isPreset, presetSpaces } from "./core/types";
 import { $, $$, find } from "./components/dom";
 import { ui, busy, ready, entryById, currentEntries } from "./core/state";
 import { navigate, readRoute, writeRoute } from "./core/navigation";
@@ -92,8 +92,10 @@ export function bindEvents() {
       render();
     }
   });
-  $<HTMLButtonElement>("#demoToggle").onclick = () =>
-    navigate(null, ui.space === "demo" ? "personal" : "demo");
+  $<HTMLSelectElement>("#datasetPreset").onchange = (event) => {
+    const value = (event.target as HTMLSelectElement).value;
+    if (isPreset(value)) void navigate(null, presetSpaces[value]);
+  };
   $<HTMLButtonElement>("#newFolderBtn").onclick = () => editDialog();
   $<HTMLButtonElement>("#importBtn").onclick = () => {
     if (!busy && ready) $<HTMLInputElement>("#fileInput").click();

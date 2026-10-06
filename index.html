@@ -53,18 +53,15 @@
             /><kbd>/</kbd></label
           >
           <div class="divider"></div>
-          <button
-            class="demo-switch"
-            id="demoToggle"
-            role="switch"
-            aria-checked="true"
-            aria-label="Dummy Data"
+          <select
+            id="datasetPreset"
+            class="dataset-preset"
+            aria-label="Dataset preset"
           >
-            <span
-              >Dummy Data
-              <span class="demo-state" id="demoState">On</span></span
-            ><span class="switch-track" aria-hidden="true"></span>
-          </button>
+            <option value="showcase">Showcase</option>
+            <option value="classic">Classic</option>
+            <option value="empty">Empty</option>
+          </select>
           <div class="head-actions">
             <button
               class="btn"
@@ -77,6 +74,20 @@
               aria-label="Import files"
             ></button
             ><input id="fileInput" type="file" multiple hidden />
+          </div>
+          <div class="toolbar">
+            <div class="filters" id="filters" aria-label="Filter content"></div>
+            <select id="sortSelect" class="sort" aria-label="Sort library">
+              <option value="curated">Curated order</option>
+              <option value="name">Name A–Z</option>
+              <option value="recent">Newest first</option>
+            </select>
+            <div class="view-controls" aria-label="Gallery view">
+              <button data-view="swipe" aria-label="SWIPE view">
+                <span>SWIPE</span></button
+              ><button data-view="grid" aria-label="Grid view"></button
+              ><button data-view="list" aria-label="List view"></button>
+            </div>
           </div>
         </header>
         <div class="browsebar">
@@ -99,20 +110,6 @@
               </div>
             </div>
           </section>
-          <div class="toolbar">
-            <div class="filters" id="filters" aria-label="Filter content"></div>
-            <select id="sortSelect" class="sort" aria-label="Sort library">
-              <option value="curated">Curated order</option>
-              <option value="name">Name A–Z</option>
-              <option value="recent">Newest first</option>
-            </select>
-            <div class="view-controls" aria-label="Gallery view">
-              <button data-view="swipe" aria-label="SWIPE view">
-                <span>SWIPE</span></button
-              ><button data-view="grid" aria-label="Grid view"></button
-              ><button data-view="list" aria-label="List view"></button>
-            </div>
-          </div>
         </div>
         <div class="stage" id="stage">
           <div class="content" id="content" aria-label="Library content">

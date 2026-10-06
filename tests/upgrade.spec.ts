@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 test("existing v2 database survives the modular build without reseeding", async ({
   page,
 }) => {
-  await page.goto("/");
-  await expect(page.locator("#demoToggle")).toBeEnabled();
+  await page.goto("/#space=demo");
+  await expect(page.locator("#datasetPreset")).toBeEnabled();
   // Seed the exact schema used by the previous release, including a user-edited demo.
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -86,7 +86,9 @@ test("existing v2 database survives the modular build without reseeding", async 
     "An original from version 2.\n",
   );
   await page.keyboard.press("Escape");
-  await page.getByRole("switch", { name: "Dummy Data" }).click();
+  await page
+    .getByRole("combobox", { name: "Dataset preset" })
+    .selectOption("classic");
   await expect(
     page.getByRole("button", {
       name: "Open My edited Demo Space",
@@ -99,8 +101,8 @@ test("existing v2 database survives the modular build without reseeding", async 
 test("shipped demo gains QA items once without overwriting edits or reseeding deletions", async ({
   page,
 }) => {
-  await page.goto("/");
-  await expect(page.locator("#demoToggle")).toBeEnabled();
+  await page.goto("/#space=demo");
+  await expect(page.locator("#datasetPreset")).toBeEnabled();
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve) => {
       const request = indexedDB.open("fable-sphere-library", 1);

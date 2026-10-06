@@ -1,3 +1,4 @@
+import { spaceLabels } from "../core/types";
 import type { LibraryEntry } from "../core/types";
 import {
   ui,
@@ -90,7 +91,7 @@ export function deleteDialog(id: string) {
   const ids = e.kind === "folder" ? descendants(id) : new Set([id]);
   openDialog(
     "Let this one go?",
-    `<p class="dialog-copy">Delete <strong>${escapeHTML(e.name)}</strong>${ids.size > 1 ? ` and the ${ids.size - 1} pieces inside it` : ""} from ${ui.space === "demo" ? "Demo Space" : "Personal Workspace"}? This permanently removes its stored files from this browser.</p><div class="dialog-actions"><button class="btn" data-close-dialog>Keep it</button><button class="btn danger" id="confirmDelete">Delete ${ids.size > 1 ? "collection" : "piece"}</button></div>`,
+    `<p class="dialog-copy">Delete <strong>${escapeHTML(e.name)}</strong>${ids.size > 1 ? ` and the ${ids.size - 1} pieces inside it` : ""} from ${spaceLabels[ui.space]}? This permanently removes its stored files from this browser.</p><div class="dialog-actions"><button class="btn" data-close-dialog>Keep it</button><button class="btn danger" id="confirmDelete">Delete ${ids.size > 1 ? "collection" : "piece"}</button></div>`,
   );
   $<HTMLButtonElement>("#confirmDelete").onclick = async () => {
     if (

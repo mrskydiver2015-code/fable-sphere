@@ -4,7 +4,7 @@ export let entries: LibraryEntry[] = [];
 export let busy = false;
 export let ready = false;
 export const ui: UiState = {
-  space: "demo",
+  space: "showcase",
   folder: null,
   view: "swipe",
   query: "",

@@ -1,5 +1,5 @@
 /** Persistent schema: compatible with the v2 single-file application's database. */
-export type Space = "demo" | "personal";
+export type Space = "showcase" | "demo" | "personal";
 export type View = "swipe" | "grid" | "list";
 export type Filter = "all" | "folders" | "images" | "documents";
 export type Sort = "curated" | "name" | "recent";
@@ -61,3 +61,22 @@ export const isFilter = (value: unknown): value is Filter =>
   value === "documents";
 export const isSort = (value: unknown): value is Sort =>
   value === "curated" || value === "name" || value === "recent";
+
+export type DatasetPreset = "showcase" | "classic" | "empty";
+export const presetSpaces: Record<DatasetPreset, Space> = {
+  showcase: "showcase",
+  classic: "demo",
+  empty: "personal",
+};
+export const spacePresets: Record<Space, DatasetPreset> = {
+  showcase: "showcase",
+  demo: "classic",
+  personal: "empty",
+};
+export const spaceLabels: Record<Space, string> = {
+  showcase: "Showcase",
+  demo: "Classic",
+  personal: "Empty · Your files",
+};
+export const isPreset = (value: unknown): value is DatasetPreset =>
+  value === "showcase" || value === "classic" || value === "empty";

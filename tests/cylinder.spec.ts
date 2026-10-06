@@ -48,8 +48,8 @@ test("rendered SWIPE bends inward, stays clickable and leaves controls flat", as
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 960 });
-  await page.goto("/");
-  await expect(page.locator("#demoToggle")).toBeEnabled();
+  await page.goto("/#space=demo");
+  await expect(page.locator("#datasetPreset")).toBeEnabled();
   const geometry = await page.locator(".wall .card").evaluateAll((cards) =>
     cards.map((card) => {
       const m = new DOMMatrix(getComputedStyle(card).transform);
@@ -101,8 +101,8 @@ test("drag rotates cards along the arc and responsive resizing keeps them reacha
   page,
 }) => {
   await page.setViewportSize({ width: 1100, height: 780 });
-  await page.goto("/");
-  await expect(page.locator("#demoToggle")).toBeEnabled();
+  await page.goto("/#space=demo");
+  await expect(page.locator("#datasetPreset")).toBeEnabled();
   const card = page.locator(".wall .card").first();
   const box = (await card.boundingBox())!;
   const before = await card.evaluate((node) => {
@@ -149,8 +149,8 @@ for (const size of [
     page,
   }, testInfo) => {
     await page.setViewportSize(size);
-    await page.goto("/");
-    await expect(page.locator("#demoToggle")).toBeEnabled();
+    await page.goto("/#space=demo");
+    await expect(page.locator("#datasetPreset")).toBeEnabled();
     const assertViewport = async () => {
       const layout = await page.evaluate(() => {
         const viewport = document
@@ -211,8 +211,8 @@ test("default demo restores original QA density, colours and curve controls", as
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1080 });
-  await page.goto("/");
-  await expect(page.locator("#demoToggle")).toBeEnabled();
+  await page.goto("/#space=demo");
+  await expect(page.locator("#datasetPreset")).toBeEnabled();
   // 153 original QA mock items plus the six existing collection entry points.
   await expect(page.locator(".wall .card")).toHaveCount(159);
   await expect(page.locator(".wall .card-category")).toHaveCount(153);

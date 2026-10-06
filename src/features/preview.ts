@@ -1,11 +1,11 @@
+import { spaceLabels } from "../core/types";
 import type { LibraryEntry } from "../core/types";
 import { ui, entryById } from "../core/state";
 import { storage } from "../core/storage";
 import { $ } from "../components/dom";
 import { icon, escapeHTML } from "../components/format";
-import { itemType } from "../components/pieces";
+import { itemType, cover } from "../components/pieces";
 import { openDialog, closeDialog, scope } from "../components/dialog";
-import { artwork } from "../data/artwork";
 import { navigate } from "../core/navigation";
 export async function openEntry(id: string) {
   const e = entryById(id);
@@ -20,7 +20,7 @@ export async function openEntry(id: string) {
 async function preview(e: LibraryEntry) {
   openDialog(
     "",
-    `<div class="preview-layout"><div class="dialog-head"><div><div class="eyebrow">${escapeHTML(itemType(e))} · ${ui.space === "demo" ? "Demo Space" : "Personal Workspace"}</div><h2 id="dialogTitle">${escapeHTML(e.name)}</h2></div><button class="icon-btn" data-close-dialog aria-label="Close preview">${icon("close")}</button></div><div class="preview-body" id="previewBody"><p class="dialog-copy">Opening your piece…</p></div><div class="preview-foot"><span id="previewCaption">${escapeHTML(e.desc || "Saved in your library.")}</span><div class="actions" id="previewActions"></div></div></div>`,
+    `<div class="preview-layout"><div class="dialog-head"><div><div class="eyebrow">${escapeHTML(itemType(e))} · ${spaceLabels[ui.space]}</div><h2 id="dialogTitle">${escapeHTML(e.name)}</h2></div><button class="icon-btn" data-close-dialog aria-label="Close preview">${icon("close")}</button></div><div class="preview-body" id="previewBody"><p class="dialog-copy">Opening your piece…</p></div><div class="preview-foot"><span id="previewCaption">${escapeHTML(e.desc || "Saved in your library.")}</span><div class="actions" id="previewActions"></div></div></div>`,
     { preview: true },
   );
   const serial = ++scope.serial;
@@ -29,8 +29,7 @@ async function preview(e: LibraryEntry) {
     if (e.fileKey) {
       blob = (await storage.read("files", e.fileKey))?.blob;
       if (!blob) throw new Error("The stored original could not be found.");
-    } else if (e.demoArt)
-      blob = await (await fetch(artwork(e.seed, e.art))).blob();
+    } else if (e.demoArt) blob = await (await fetch(cover(e))).blob();
     else if (e.text !== undefined)
       blob = new Blob([e.text], { type: "text/plain" });
     if (serial !== scope.serial) return;

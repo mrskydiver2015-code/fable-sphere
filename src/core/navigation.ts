@@ -1,4 +1,4 @@
-import type { Space } from "./types";
+import { isPreset, presetSpaces, spacePresets, type Space } from "./types";
 import {
   busy,
   ready,
@@ -14,10 +14,17 @@ import { $ } from "../components/dom";
 const viewMemory = new Map<string, number>();
 export function readRoute(): { space: Space; folder: string | null } {
   const p = new URLSearchParams(location.hash.slice(1));
-  return {
-    space: p.get("space") === "personal" ? "personal" : "demo",
-    folder: p.get("folder") || null,
-  };
+  const explicit = p.get("space");
+  let space: Space = "showcase";
+  if (explicit === "showcase" || explicit === "demo" || explicit === "personal")
+    space = explicit;
+  else {
+    try {
+      const saved = localStorage.getItem("fable-sphere-dataset");
+      if (isPreset(saved)) space = presetSpaces[saved];
+    } catch {}
+  }
+  return { space, folder: p.get("folder") || null };
 }
 export function writeRoute(replace = false) {
   const p = new URLSearchParams({ space: ui.space });
@@ -56,6 +63,9 @@ export async function navigate(
   $<HTMLInputElement>("#searchInput").value = "";
   ui.index = viewMemory.get(`${ui.space}:${ui.folder}`) || 0;
   lineage(ui.folder).forEach((e) => ui.expanded.add(e.id));
+  try {
+    localStorage.setItem("fable-sphere-dataset", spacePresets[ui.space]);
+  } catch {}
   if (historyWrite) writeRoute();
   notify();
 }

@@ -1,3 +1,4 @@
+import { spaceLabels, spacePresets } from "../core/types";
 import { ui, ready, entryById, lineage, currentEntries } from "../core/state";
 import { $, $$ } from "./dom";
 import { icon, escapeHTML } from "./format";
@@ -8,13 +9,8 @@ import { updateStorageInfo } from "./status";
 export function render() {
   if (!ready) return;
   $("#navigation").innerHTML = navMarkup();
-  $<HTMLButtonElement>("#demoToggle").setAttribute(
-    "aria-checked",
-    String(ui.space === "demo"),
-  );
-  $("#demoState").textContent = ui.space === "demo" ? "On" : "Off";
-  $("#workspaceLabel").textContent =
-    ui.space === "demo" ? "The Demo Space" : "Personal Workspace";
+  $<HTMLSelectElement>("#datasetPreset").value = spacePresets[ui.space];
+  $("#workspaceLabel").textContent = spaceLabels[ui.space];
   const folder = entryById(ui.folder);
   $("#breadcrumbs").innerHTML =
     `${ui.folder ? `<button class="icon-btn" data-up aria-label="Go to parent collection">${icon("left")}</button>` : ""}<button data-nav="" ${!ui.folder ? 'aria-current="page"' : ""}>Library</button>${lineage(
@@ -36,7 +32,7 @@ export function render() {
       ? folder.name
       : "A world of your own.";
   $("#pageDescription").textContent = ui.query
-    ? `${currentEntries().length} discoveries in your ${ui.space === "demo" ? "demo" : "personal"} library.`
+    ? `${currentEntries().length} discoveries in your ${spaceLabels[ui.space]} library.`
     : folder
       ? folder.desc || "A collection of things worth keeping."
       : "Places for your stories, discoveries, and things worth keeping.";

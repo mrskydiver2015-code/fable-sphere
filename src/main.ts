@@ -24,8 +24,9 @@ function banner(message: string) {
   $("#banner").textContent = message;
 }
 function renderBusy() {
-  for (const selector of ["#demoToggle", "#newFolderBtn", "#importBtn"])
-    $<HTMLButtonElement>(selector).disabled = busy || !ready;
+  for (const selector of ["#datasetPreset", "#newFolderBtn", "#importBtn"])
+    $<HTMLButtonElement | HTMLSelectElement>(selector).disabled =
+      busy || !ready;
   $$<HTMLButtonElement>("#dialog button[type=submit]").forEach(
     (button) => (button.disabled = busy),
   );

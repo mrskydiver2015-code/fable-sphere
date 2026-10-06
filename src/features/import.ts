@@ -1,3 +1,4 @@
+import { spaceLabels } from "../core/types";
 import type { LibraryEntry, StoredFile } from "../core/types";
 import {
   ui,
@@ -20,7 +21,7 @@ export async function importFiles(files: File[]) {
     parentId = ui.folder;
   setBusy(true);
   toast(
-    `Keeping ${files.length} ${files.length === 1 ? "piece" : "pieces"} in your ${space === "demo" ? "demo" : "personal"} library…`,
+    `Keeping ${files.length} ${files.length === 1 ? "piece" : "pieces"} in your ${spaceLabels[space]} library…`,
   );
   try {
     const put: LibraryEntry[] = [],
@@ -67,7 +68,7 @@ export async function importFiles(files: File[]) {
     await loadEntries();
     notify();
     toast(
-      `${files.length} ${files.length === 1 ? "original saved" : "originals saved"} in ${space === "demo" ? "Demo Space" : "Personal Workspace"}.`,
+      `${files.length} ${files.length === 1 ? "original saved" : "originals saved"} in ${spaceLabels[space]}.`,
     );
     navigator.storage
       ?.persist?.()

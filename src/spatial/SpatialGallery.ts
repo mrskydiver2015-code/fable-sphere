@@ -23,6 +23,8 @@ export class SpatialGallery {
   ch = 0;
   offset = 0;
   width = 0;
+  scale = 1;
+  camera: HTMLElement | null = null;
   private visibleCards = new Set<number>();
   wall: HTMLElement | null = null;
   cards: HTMLElement[] = [];
@@ -65,11 +67,13 @@ export class SpatialGallery {
     clearTimeout(this.wheelTimer);
     this.drag = null;
     this.wall = null;
+    this.camera = null;
     this.visibleCards.clear();
   }
   mount(list: LibraryEntry[]) {
     this.list = list;
 
+    this.camera = this.viewport.querySelector<HTMLElement>(".cylinder-camera")!;
     this.wall = this.viewport.querySelector<HTMLElement>(".wall")!;
     this.cards = [...this.wall.querySelectorAll<HTMLElement>(".card")];
     this.cards.forEach((card) => {
@@ -79,7 +83,7 @@ export class SpatialGallery {
     });
     this.abort = new AbortController();
     const options = { signal: this.abort.signal };
-    this.viewport.style.perspective = `${CYLINDER.perspective}px`;
+    this.camera.style.perspective = `${CYLINDER.perspective}px`;
     this.layout();
     this.observer = new ResizeObserver(() => this.layout());
     this.observer.observe(this.viewport);
@@ -105,7 +109,7 @@ export class SpatialGallery {
       if (!d) return;
       if (Math.abs(x - d.start) > 7) d.moved = true;
       if (!d.moved) return;
-      const delta = (x - d.x) * CYLINDER.dragSensitivity,
+      const delta = ((x - d.x) * CYLINDER.dragSensitivity) / this.scale,
         now = performance.now();
       wall.classList.add("dragging");
       const resistance =
@@ -123,7 +127,8 @@ export class SpatialGallery {
       const [startTime, startX] = d.samples[0];
       this.velocity =
         now > startTime
-          ? (-(x - startX) * CYLINDER.dragSensitivity) / (now - startTime)
+          ? (-(x - startX) * CYLINDER.dragSensitivity) /
+            ((now - startTime) * this.scale)
           : 0;
       d.x = x;
       d.time = now;
@@ -143,8 +148,7 @@ export class SpatialGallery {
     surface.addEventListener(
       "pointerdown",
       (e) => {
-        // Touch has its own non-passive path: Safari otherwise cancels pointers
-        // when native panning begins with touch-action: pan-x pan-y.
+        // Touch uses an axis-aware path; mouse and pen retain pointer capture.
         if (
           e.pointerType === "touch" ||
           this.drag ||
@@ -272,31 +276,59 @@ export class SpatialGallery {
     if (!this.wall) return;
     cancelAnimationFrame(this.raf);
     this.raf = 0;
-    const w = this.viewport.clientWidth,
-      h = this.viewport.clientHeight;
-    this.width = w;
-    // Scale both axes together, keeping the QA aspect ratio in every orientation.
+    const physicalWidth = this.viewport.clientWidth,
+      physicalHeight = this.viewport.clientHeight;
+    const landscape = matchMedia(
+      "(max-height:520px), (max-width:1100px) and (orientation:landscape) and (pointer:coarse)",
+    ).matches;
     this.rows = CYLINDER.rows;
-    this.gap = w < 540 ? 6 : CYLINDER.gap;
-    const desiredColumns = w < 420 ? 3 : w < 540 ? 4 : CYLINDER.columns;
-    const scale = Math.max(
-      0.1,
-      Math.min(
+    let w = physicalWidth,
+      h = physicalHeight;
+    this.scale = 1;
+    if (landscape) {
+      // Lay out a complete, readable six-column scene, then scale the camera as one unit.
+      w =
+        CYLINDER.columns * CYLINDER.cardWidth +
+        (CYLINDER.columns - 1) * CYLINDER.gap;
+      this.cw = CYLINDER.cardWidth;
+      this.ch = CYLINDER.cardWidth / 1.6;
+      this.gap = CYLINDER.gap;
+      h = this.rows * this.ch + (this.rows - 1) * this.gap + 24;
+      this.scale = Math.min(
         1,
-        (w - (w < 540 ? 12 : 0) - (desiredColumns - 1) * this.gap) /
-          (desiredColumns * CYLINDER.cardWidth),
-        (h - 24 - (this.rows - 1) * this.gap) /
-          (this.rows * CYLINDER.cardHeight),
-      ),
-    );
-    this.cw = CYLINDER.cardWidth * scale;
-    this.ch = CYLINDER.cardHeight * scale;
-    this.cols = Math.max(
-      1,
-      Math.min(10, Math.floor((w + this.gap) / (this.cw + this.gap))),
-    );
+        (physicalWidth - 8) / w,
+        (physicalHeight - 8) / h,
+      );
+      this.cols = CYLINDER.columns;
+    } else {
+      this.gap = w < 540 ? 6 : CYLINDER.gap;
+      const desiredColumns = w < 420 ? 3 : w < 540 ? 4 : CYLINDER.columns;
+      const cardScale = Math.max(
+        0.1,
+        Math.min(
+          1,
+          (w - (w < 540 ? 12 : 0) - (desiredColumns - 1) * this.gap) /
+            (desiredColumns * CYLINDER.cardWidth),
+          (h - 24 - (this.rows - 1) * this.gap) /
+            (this.rows * CYLINDER.cardHeight),
+        ),
+      );
+      this.cw = CYLINDER.cardWidth * cardScale;
+      this.ch = CYLINDER.cardHeight * cardScale;
+      this.cols = Math.max(
+        1,
+        Math.min(10, Math.floor((w + this.gap) / (this.cw + this.gap))),
+      );
+    }
+    this.width = w;
+    if (this.camera) {
+      this.camera.style.width = `${w}px`;
+      this.camera.style.height = `${h}px`;
+      this.camera.style.transform = `translate(-50%, -50%) scale(${this.scale})`;
+    }
     this.offset = (w - (this.cols * this.cw + (this.cols - 1) * this.gap)) / 2;
-    this.viewport.classList.toggle("compact-wall", this.ch < 110);
+    this.viewport.classList.toggle("landscape-wall", landscape);
+    this.viewport.classList.toggle("compact-wall", !landscape && this.ch < 110);
     this.stride = this.cw + this.gap;
     this.max = Math.max(
       0,

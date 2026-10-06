@@ -29,7 +29,7 @@ fs.mkdirSync(out, { recursive: true });
   });
   const waitReady = () =>
     page.waitForFunction(
-      () => document.querySelector("#demoToggle").disabled === false,
+      () => document.querySelector("#datasetPreset").disabled === false,
     );
   const home = () => page.locator('#breadcrumbs [data-nav=""]').click();
   const close = () =>
@@ -44,7 +44,7 @@ fs.mkdirSync(out, { recursive: true });
     await waitReady();
   }
   try {
-    await page.goto(origin);
+    await page.goto(origin + "/#space=demo");
     await waitReady();
     assert.equal(await page.locator("[data-card]").count(), 159);
     await page.screenshot({ path: out + "/desktop.png" });
@@ -71,7 +71,7 @@ fs.mkdirSync(out, { recursive: true });
     await page.goBack();
     assert.equal(await page.locator("h1").innerText(), "Chronicles");
     await home();
-    await page.locator("#demoToggle").click();
+    await page.locator("#datasetPreset").selectOption("empty");
     await waitReady();
     assert.match(
       await page.locator("#content").innerText(),
@@ -109,7 +109,7 @@ fs.mkdirSync(out, { recursive: true });
     await page.waitForFunction(
       () =>
         document.querySelectorAll("[data-card]").length === 3 &&
-        !document.querySelector("#demoToggle").disabled,
+        !document.querySelector("#datasetPreset").disabled,
     );
     await page.reload();
     await waitReady();
@@ -180,7 +180,7 @@ fs.mkdirSync(out, { recursive: true });
         .count(),
       1,
     );
-    await page.locator("#demoToggle").click();
+    await page.locator("#datasetPreset").selectOption("classic");
     await waitReady();
     assert.equal(await page.locator("[data-card]").count(), 159);
     await page.getByRole("button", { name: "SWIPE view", exact: true }).click();
@@ -219,7 +219,7 @@ fs.mkdirSync(out, { recursive: true });
       .click();
     await page.waitForSelector("#previewBody img");
     await close();
-    await page.locator("#demoToggle").click();
+    await page.locator("#datasetPreset").selectOption("empty");
     await waitReady();
     assert.equal(
       await page
@@ -284,7 +284,7 @@ fs.mkdirSync(out, { recursive: true });
       buffer: Buffer.from("Must not leave metadata behind"),
     });
     await page.waitForFunction(
-      () => !document.querySelector("#demoToggle").disabled,
+      () => !document.querySelector("#datasetPreset").disabled,
     );
     assert.equal(
       (await readStore(page, "entries")).filter((e) => e.space === "personal")
@@ -296,7 +296,7 @@ fs.mkdirSync(out, { recursive: true });
       IDBObjectStore.prototype.put = window.originalPut;
     });
     await page.setViewportSize({ width: 1440, height: 960 });
-    await page.locator("#demoToggle").click();
+    await page.locator("#datasetPreset").selectOption("classic");
     await waitReady();
     await page.getByRole("button", { name: "Grid view", exact: true }).click();
     await page.screenshot({ path: out + "/grid.png" });
@@ -328,7 +328,7 @@ fs.mkdirSync(out, { recursive: true });
     const legacy = await legacyContext.newPage();
     await legacy.goto(origin + "/#space=personal");
     await legacy.waitForFunction(
-      () => !document.querySelector("#demoToggle").disabled,
+      () => !document.querySelector("#datasetPreset").disabled,
     );
     assert.equal(
       await legacy
@@ -352,7 +352,7 @@ fs.mkdirSync(out, { recursive: true });
     );
     await legacy.reload();
     await legacy.waitForFunction(
-      () => !document.querySelector("#demoToggle").disabled,
+      () => !document.querySelector("#datasetPreset").disabled,
     );
     assert.equal(
       (await readStore(legacy, "entries")).filter((e) => e.space === "personal")

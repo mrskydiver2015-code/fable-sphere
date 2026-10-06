@@ -58,9 +58,12 @@ SWIPE uses the original QA calibration in `src/spatial/cylinder.ts`: curvature
 value describes momentum, not that camera distance. The matrix has **four fixed rows**,
 178 × 128 px cards, 8 px gaps and six columns at its centred 1108 px maximum width.
 Portrait phones show three columns below 420 px and four on wider phones, with
-6 px gaps. Both card dimensions scale together to preserve the 178:128 aspect
-ratio, including landscape; four rows always stay inside `100dvh`. Short landscape
-screens can show additional columns. Cards travel along an inward-facing arc with depth,
+6 px gaps. Four rows always stay inside `100dvh`. At heights of 520 px or less
+(and on coarse-pointer landscape tablets up to 1100 px wide), the sidebar becomes
+a hamburger drawer and every top control shares one 40 px toolbar. The full
+six-column camera is uniformly scaled to fit the stage; its cards retain a 16:10
+landscape ratio and two-line titles. Desktop calibration is unchanged. Cards travel
+along an inward-facing arc with depth,
 tangent rotation and fading edge slivers; navigation and inspection stay flat.
 The critically damped spring is solved analytically for consistent 60/120 Hz motion.
 Only visible columns and edge overscan are updated during animation. The footer
@@ -69,20 +72,29 @@ not run an idle animation loop. Tuning is session-only.
 
 The compact search/action row, breadcrumb/title strip and filters leave at least
 74% of viewport height to the gallery in the tested 320–1440 px layouts. On
-landscape phones the breadcrumbs and filters share a row. Grid cards use a dense
+landscape phones secondary headings are hidden. Grid cards use a dense
 145 px desktop minimum and three/four columns on portrait phones, with full
 accessible titles and two-line mobile captions. Safe-area padding and a 16 px
 search field accommodate iOS display cutouts and avoid focus zoom.
 
-The cylinder uses `touch-action: pan-x pan-y`. Mouse/pen use pointer capture;
-single-finger horizontal touch uses a non-passive touchmove handler so browser
-panning does not cancel the custom swipe. Vertical intent and multi-touch remain
-with the browser. Responsive tests cover real Chromium touch input, orientation
+The cylinder uses `touch-action: none`, including iOS Safari. Mouse/pen use pointer
+capture; single-finger horizontal touch uses an axis-aware touchmove handler.
+Vertical gestures and multi-touch do not rotate the cylinder. Drag distances and
+velocity are converted into the scaled camera's coordinates. Responsive tests cover real Chromium touch input, orientation
 changes, viewport allocation and aspect ratios. Safari/WebKit was not run in the
 implementation environment because its browser download was blocked by network
 policy; Chromium mobile emulation is not a substitute for a physical iOS check.
 
-The default Demo Space restores all **153 original QA mock items** from 24
+**Showcase** is the default dataset: 40 illustrated game and creative project
+covers, including Pac-Man Reimagined, Retro Arcade Lab, WebGL Shader Explorer,
+3D Gaussian Splatting, Neural Synthesis and Industrial Automation Model. Every
+cover is an original bundled 1280 × 800 SVG scene in `public/showcase/`, with no
+third-party image requests. Regenerate the illustrations and manifest with
+`python3 scripts/generate-showcase.py` (then run Prettier on `src/data/showcase.ts`).
+Covers open as full-resolution images and downloads; they are project illustrations,
+not playable games. Browser tests decode all 40 assets and verify their dimensions.
+
+**Classic** restores all **153 original QA mock items** from 24
 colour-coded categories, including templates, reports, documents, images and
 bookmarks. Together with the six existing collection entry points, the root has
 159 cards in 40 columns. The 18 nested sample entries remain available (177 total).
@@ -97,7 +109,13 @@ reaching into app internals.
 
 ## Library and originals
 
-- **Dummy Data On / Off** switches between separate, saved Demo and Personal spaces.
+- **Dataset preset** switches between Showcase, Classic and Empty. The selected
+  preset persists in `localStorage`; explicit hash routes take priority. Existing
+  `#space=demo` and `#space=personal` links remain valid.
+- **Empty** is the unseeded personal workspace, initially zero items with upload
+  onboarding. User uploads and collections persist across preset switches; choosing
+  Empty never deletes personal data. Existing personal files remain available here.
+- Showcase and Classic seed independently once; user edits and deletions are preserved.
 - Collections nest freely. Breadcrumbs, the parent button and browser history
   retain your location. The info button supports editing, moving and deletion.
 - Import or drop files into the current collection, including the library root.
