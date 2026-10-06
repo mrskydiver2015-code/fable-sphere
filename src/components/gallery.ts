@@ -5,7 +5,13 @@ import { icon, escapeHTML, readableSize, dateLabel } from "./format";
 import { cover, itemType, folderCount } from "./pieces";
 import { spatial } from "../spatial/instance";
 function cardMarkup(e: LibraryEntry) {
-  return `<article class="card ${ui.selected === e.id ? "selected" : ""}" data-card="${escapeHTML(e.id)}"><button class="card-open" data-open="${escapeHTML(e.id)}" aria-label="Open ${escapeHTML(e.name)}"><div class="card-art"><img src="${cover(e)}" alt="" draggable="false"><span class="art-label">${e.kind === "folder" ? "Curated collection" : escapeHTML(itemType(e))}</span>${e.kind === "folder" ? `<span class="folder-stack">${icon("folder")}${children(e.id).length}</span>` : ""}</div><div class="card-caption"><span class="card-title">${escapeHTML(e.name)}</span><span class="card-meta">${
+  const color = /^#[0-9a-f]{6}$/i.test(e.headerColor || "")
+    ? e.headerColor
+    : "#64748b";
+  const header = e.category
+    ? `<span class="card-category" style="--category-color:${color}">${escapeHTML(e.category)} · ${escapeHTML(itemType(e))}</span>`
+    : "";
+  return `<article class="card ${ui.selected === e.id ? "selected" : ""}" data-card="${escapeHTML(e.id)}"><button class="card-open" data-open="${escapeHTML(e.id)}" aria-label="Open ${escapeHTML(e.name)}">${header}<div class="card-art"><img src="${cover(e)}" alt="" draggable="false"><span class="art-label">${e.kind === "folder" ? "Curated collection" : escapeHTML(itemType(e))}</span>${e.kind === "folder" ? `<span class="folder-stack">${icon("folder")}${children(e.id).length}</span>` : ""}</div><div class="card-caption"><span class="card-title">${escapeHTML(e.name)}</span><span class="card-meta">${
     ui.query
       ? escapeHTML(
           lineage(e.parentId)
@@ -34,6 +40,7 @@ export function renderContent() {
   content.className =
     "content" + (ui.view === "swipe" && list.length ? " spatial" : "");
   $("#spatialControls").hidden = ui.view !== "swipe" || !list.length;
+  $("#qaControls").hidden = ui.view !== "swipe" || !list.length;
   $("#footerHint").textContent =
     ui.view === "swipe"
       ? "Drag to explore · Arrow keys to wander"

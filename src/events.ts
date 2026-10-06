@@ -2,6 +2,7 @@ import { isView, isFilter, isSort } from "./core/types";
 import { $, $$, find } from "./components/dom";
 import { ui, busy, ready, entryById, currentEntries } from "./core/state";
 import { navigate, readRoute, writeRoute } from "./core/navigation";
+import { CYLINDER, projectCylinder } from "./spatial/cylinder";
 import { spatial } from "./spatial/instance";
 import { render } from "./components/shell";
 import { renderContent } from "./components/gallery";
@@ -13,6 +14,29 @@ import { openEntry } from "./features/preview";
 import { importFiles } from "./features/import";
 import { icon } from "./components/format";
 export function bindEvents() {
+  const qaPanel = $("#qaPanel"),
+    qaToggle = $("#qaToggle");
+  const updateQA = () => {
+    if (qaPanel.hidden) return;
+    const radius = projectCylinder(0, spatial.width, spatial.curve).radius;
+    $("#qaMetrics").textContent =
+      `${spatial.rows} rows × ${Math.ceil(spatial.cards.length / spatial.rows)} columns · ${spatial.cols} in view · ${Math.round(spatial.cw)} × ${Math.round(spatial.ch)} px · gap ${spatial.gap} px · R ${Math.round(radius)} px · perspective ${CYLINDER.perspective} px · momentum ${CYLINDER.projectionMs} ms · spring ${CYLINDER.springK}`;
+  };
+  qaToggle.onclick = () => {
+    qaPanel.hidden = !qaPanel.hidden;
+    qaToggle.setAttribute("aria-expanded", String(!qaPanel.hidden));
+    updateQA();
+  };
+  $("#content").addEventListener("spatialchange", updateQA);
+  const setCurve = (curve: number) => {
+    $<HTMLInputElement>("#qaCurve").value = String(curve);
+    $("#qaCurveValue").textContent = `${curve}°`;
+    spatial.setCurve(curve);
+  };
+  $<HTMLInputElement>("#qaCurve").oninput = (event) =>
+    setCurve(Number((event.target as HTMLInputElement).value));
+  $("#qaReset").onclick = () => setCurve(CYLINDER.curve);
+
   /* Event delegation: controls are native buttons, keyboard and touch share actions. */
   document.addEventListener("click", (e) => {
     const b = e.target instanceof Element ? e.target.closest("button") : null;

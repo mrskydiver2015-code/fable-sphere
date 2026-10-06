@@ -23,11 +23,6 @@ fs.mkdirSync(out, { recursive: true });
     await p.waitForFunction(
       () => !document.querySelector("#demoToggle").disabled,
     );
-    // A populated wall must have offscreen columns even with three visible rows.
-    await p.locator("#searchInput").fill("e");
-    await p.waitForFunction(
-      () => document.querySelectorAll("[data-card]").length > 12,
-    );
     const titleBeforeDrag = await p.locator("h1").innerText();
     // Mouse drag moves wall and does not accidentally enter a folder.
     const box = await p
@@ -128,10 +123,6 @@ fs.mkdirSync(out, { recursive: true });
     await t.goto(origin);
     await t.waitForFunction(
       () => !document.querySelector("#demoToggle").disabled,
-    );
-    await t.locator("#searchInput").fill("e");
-    await t.waitForFunction(
-      () => document.querySelectorAll("[data-card]").length > 12,
     );
     const touchTitle = await t.locator("h1").innerText();
     const client = await touch.newCDPSession(t);

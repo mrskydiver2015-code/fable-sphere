@@ -52,13 +52,27 @@ its constructor. It has no runtime dependency on storage or library queries.
 `dispose()` also removes its reduced-motion listener.
 
 SWIPE uses the original QA calibration in `src/spatial/cylinder.ts`: curvature
-32 (`R = viewportWidth / 2 × 38 / 32`, approximately 449 px at width 756),
+32 (`R = viewportWidth / 2 × 38 / 32`, approximately 658 px at the 1108 px QA width),
 300 ms momentum projection, spring stiffness 0.0002 (QA value 20), drag sensitivity
 1.00 and edge resistance 0.30. CSS camera perspective is 1100 px; the QA `proj`
-value describes momentum, not that camera distance. Card dimensions and row/column
-counts remain responsive. Cards travel along an inward-facing arc with depth,
+value describes momentum, not that camera distance. The matrix has **four fixed rows**,
+178 × 128 px cards, 8 px gaps and six columns at its centred 1108 px maximum width.
+Narrow screens show fewer columns; short screens compress card height to keep all
+four rows inside `100dvh`. Cards travel along an inward-facing arc with depth,
 tangent rotation and fading edge slivers; navigation and inspection stay flat.
 The critically damped spring is solved analytically for consistent 60/120 Hz motion.
+Only visible columns and edge overscan are updated during animation. The footer
+**QA** toggle exposes live geometry, a curve slider and calibration reset; it does
+not run an idle animation loop. Tuning is session-only.
+
+The default Demo Space restores all **153 original QA mock items** from 24
+colour-coded categories, including templates, reports, documents, images and
+bookmarks. Together with the six existing collection entry points, the root has
+159 cards in 40 columns. The 18 nested sample entries remain available (177 total).
+Images have generated previews; other mock items open labelled sample text, not
+pretend original files. A one-time additive migration upgrades the shipped demo
+without replacing existing entries, personal files or custom demo spaces. Deleted
+mock items are not reseeded on later reloads.
 
 The application modules expose no mutable state or debug interfaces on `window`.
 Regression tests inspect visible behavior and persisted records rather than

@@ -16,6 +16,8 @@ export interface LibraryEntry {
   created: number;
   updated: number;
   type?: string;
+  category?: string;
+  headerColor?: string;
   mime?: string;
   bytes?: number;
   fileKey?: string;

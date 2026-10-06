@@ -15,7 +15,8 @@ export class SpatialGallery {
   velocity = 0;
   stride = 1;
   max = 0;
-  rows = 1;
+  rows: number = CYLINDER.rows;
+  curve: number = CYLINDER.curve;
   cols = 1;
   gap = 0;
   cw = 0;
@@ -207,21 +208,26 @@ export class SpatialGallery {
     const w = this.viewport.clientWidth,
       h = this.viewport.clientHeight;
     this.width = w;
-    // Keep a wall at laptop/mobile heights, without inventing duplicate entries.
-    this.rows = Math.min(this.cards.length, h >= 620 ? 4 : 3);
-    this.gap = w < 540 ? 10 : 14;
-    this.ch = Math.max(1, (h - 24 - (this.rows - 1) * this.gap) / this.rows);
-    const preferredWidth = Math.max(110, Math.min(260, this.ch * 1.45));
+    // Fixed four-row QA matrix; smaller screens show fewer columns, never fewer rows.
+    this.rows = CYLINDER.rows;
+    this.gap = CYLINDER.gap;
+    this.cw = Math.min(CYLINDER.cardWidth, w);
+    this.ch = Math.max(
+      1,
+      Math.min(
+        CYLINDER.cardHeight,
+        (h - 24 - (this.rows - 1) * this.gap) / this.rows,
+      ),
+    );
     this.cols = Math.max(
       1,
       Math.min(
-        Math.ceil(this.cards.length / this.rows),
-        Math.floor((w - 24 + this.gap) / (preferredWidth + this.gap)),
+        CYLINDER.columns,
+        Math.floor((w + this.gap) / (this.cw + this.gap)),
       ),
     );
-    this.cw = Math.min(360, (w - 24 - (this.cols - 1) * this.gap) / this.cols);
     this.offset = (w - (this.cols * this.cw + (this.cols - 1) * this.gap)) / 2;
-    this.viewport.classList.toggle("compact-wall", this.ch < 120);
+    this.viewport.classList.toggle("compact-wall", this.ch < 110);
     this.stride = this.cw + this.gap;
     this.max = Math.max(
       0,
@@ -242,6 +248,12 @@ export class SpatialGallery {
         "px";
     });
     this.apply();
+    this.viewport.dispatchEvent(new Event("spatialchange"));
+  }
+  setCurve(curve: number) {
+    this.curve = Math.max(6, Math.min(50, curve));
+    this.apply();
+    this.viewport.dispatchEvent(new Event("spatialchange"));
   }
   private queueApply() {
     if (this.raf) return;
@@ -266,7 +278,11 @@ export class SpatialGallery {
     );
     for (let col = first; col <= last; col++) {
       const left = this.offset + col * this.stride - this.pos;
-      const projection = projectCylinder(left + this.cw / 2 - half, w);
+      const projection = projectCylinder(
+        left + this.cw / 2 - half,
+        w,
+        this.curve,
+      );
       if (projection.opacity <= 0) continue;
       const transform = `translate3d(${half + projection.x - this.cw / 2}px,0,${projection.z}px) rotateY(${projection.rotation}deg)`;
       const interactive = projection.opacity === 1;

@@ -95,3 +95,57 @@ test("existing v2 database survives the modular build without reseeding", async 
   ).toBeVisible();
   await expect(page.locator("[data-card]")).toHaveCount(1);
 });
+
+test("shipped demo gains QA items once without overwriting edits or reseeding deletions", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator("#demoToggle")).toBeEnabled();
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve) => {
+      const request = indexedDB.open("fable-sphere-library", 1);
+      request.onsuccess = () => resolve(request.result);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(["entries", "meta"], "readwrite");
+      const store = tx.objectStore("entries");
+      store.openCursor().onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>)
+          .result;
+        if (!cursor) return;
+        if (cursor.value.id.startsWith("matrix-")) cursor.delete();
+        if (cursor.value.id === "chronicles")
+          cursor.update({ ...cursor.value, name: "My edited chronicles" });
+        cursor.continue();
+      };
+      tx.objectStore("meta").delete("matrix-demo-v1");
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  });
+  await page.reload();
+  await expect(page.locator(".wall .card")).toHaveCount(159);
+  await expect(
+    page.getByRole("button", {
+      name: "Open My edited chronicles",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve) => {
+      const request = indexedDB.open("fable-sphere-library", 1);
+      request.onsuccess = () => resolve(request.result);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction("entries", "readwrite");
+      tx.objectStore("entries").delete("demo:matrix-ai-0");
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  });
+  await page.reload();
+  await expect(page.locator(".wall .card")).toHaveCount(158);
+  await expect(page.locator('[data-card="matrix-ai-0"]')).toHaveCount(0);
+});

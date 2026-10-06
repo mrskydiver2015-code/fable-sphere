@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import {
   CYLINDER,
   projectCylinder,
@@ -6,44 +6,12 @@ import {
   springStep,
 } from "../src/spatial/cylinder";
 
-/** A populated library exercises multiple full columns without duplicating UI cards. */
-async function populateWall(page: Page, count = 120) {
-  await page.evaluate(async (count) => {
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("fable-sphere-library", 1);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction("entries", "readwrite");
-      const store = tx.objectStore("entries");
-      for (let i = 0; i < count; i++)
-        store.put({
-          key: `demo:wall-${i}`,
-          id: `wall-${i}`,
-          space: "demo",
-          parentId: null,
-          kind: "folder",
-          name: `Wall ${i}`,
-          seed: i % 6,
-          art: "landscape",
-          created: i,
-          updated: i,
-        });
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-    db.close();
-  }, count);
-  await page.reload();
-  await expect(page.locator("#demoToggle")).toBeEnabled();
-}
-
 test("reference radius, concavity and momentum are preserved", () => {
   const center = projectCylinder(0, 756),
     left = projectCylinder(-315, 756),
     right = projectCylinder(315, 756);
   expect(center.radius).toBeCloseTo(449, 0);
+  expect(projectCylinder(0, 1108).radius).toBeCloseTo(657.875, 3);
   expect(center.rotation).toBeCloseTo(0, 8);
   expect(left.rotation).toBeGreaterThan(30);
   expect(right.rotation).toBeLessThan(-30);
@@ -82,7 +50,6 @@ test("rendered SWIPE bends inward, stays clickable and leaves controls flat", as
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.goto("/");
   await expect(page.locator("#demoToggle")).toBeEnabled();
-  await populateWall(page);
   const geometry = await page.locator(".wall .card").evaluateAll((cards) =>
     cards.map((card) => {
       const m = new DOMMatrix(getComputedStyle(card).transform);
@@ -95,8 +62,8 @@ test("rendered SWIPE bends inward, stays clickable and leaves controls flat", as
     }),
   );
   const rows = new Set(geometry.map((card) => card.top)).size;
-  expect(rows).toBe(3);
-  const columns = geometry.filter((_, i) => i % rows === 0).slice(0, 4);
+  expect(rows).toBe(4);
+  const columns = geometry.filter((_, i) => i % rows === 0).slice(0, 6);
   const left = columns[0],
     right = columns[columns.length - 1];
   const center = columns[Math.floor(columns.length / 2)];
@@ -136,7 +103,6 @@ test("drag rotates cards along the arc and responsive resizing keeps them reacha
   await page.setViewportSize({ width: 1100, height: 780 });
   await page.goto("/");
   await expect(page.locator("#demoToggle")).toBeEnabled();
-  await populateWall(page);
   const card = page.locator(".wall .card").first();
   const box = (await card.boundingBox())!;
   const before = await card.evaluate((node) => {
@@ -169,15 +135,15 @@ test("drag rotates cards along the arc and responsive resizing keeps them reacha
   await expect(focused).toBeVisible();
   await expect(focused.locator("..")).toHaveAttribute("aria-hidden", "false");
   await page.keyboard.press("Enter");
-  await expect(page.locator("h1")).not.toHaveText("A world of your own.");
+  await expect(page.locator("#dialog")).toBeVisible();
 });
 
 for (const size of [
   { width: 1440, height: 1080, rows: 4 },
-  { width: 1366, height: 768, rows: 3 },
-  { width: 390, height: 844, rows: 3 },
-  { width: 320, height: 568, rows: 3 },
-  { width: 844, height: 390, rows: 3 },
+  { width: 1366, height: 768, rows: 4 },
+  { width: 390, height: 844, rows: 4 },
+  { width: 320, height: 568, rows: 4 },
+  { width: 844, height: 390, rows: 4 },
 ]) {
   test(`wall fills ${size.width}×${size.height} without page scrolling`, async ({
     page,
@@ -185,7 +151,6 @@ for (const size of [
     await page.setViewportSize(size);
     await page.goto("/");
     await expect(page.locator("#demoToggle")).toBeEnabled();
-    await populateWall(page);
     const assertViewport = async () => {
       const layout = await page.evaluate(() => {
         const viewport = document
@@ -241,3 +206,55 @@ for (const size of [
     await expect(page.locator("#prevBtn")).toBeDisabled();
   });
 }
+
+test("default demo restores original QA density, colours and curve controls", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1080 });
+  await page.goto("/");
+  await expect(page.locator("#demoToggle")).toBeEnabled();
+  // 153 original QA mock items plus the six existing collection entry points.
+  await expect(page.locator(".wall .card")).toHaveCount(159);
+  await expect(page.locator(".wall .card-category")).toHaveCount(153);
+  const geometry = await page
+    .locator(".wall .card")
+    .first()
+    .evaluate((card) => ({
+      width: (card as HTMLElement).style.width,
+      height: (card as HTMLElement).style.height,
+      transform: (card as HTMLElement).style.transform,
+    }));
+  expect(geometry.width).toBe("178px");
+  expect(geometry.height).toBe("128px");
+  await page.locator("#qaToggle").click();
+  await expect(page.locator("#qaMetrics")).toContainText(
+    "4 rows × 40 columns · 6 in view",
+  );
+  await expect(page.locator("#qaMetrics")).toContainText(
+    "gap 8 px · R 658 px · perspective 1100 px",
+  );
+  await page.locator("#qaCurve").fill("45");
+  await expect(page.locator("#qaCurveValue")).toHaveText("45°");
+  await expect
+    .poll(() =>
+      page
+        .locator(".wall .card")
+        .first()
+        .evaluate((card) => (card as HTMLElement).style.transform),
+    )
+    .not.toBe(geometry.transform);
+  await page.locator("#qaReset").click();
+  await expect(page.locator("#qaCurveValue")).toHaveText("32°");
+  await expect
+    .poll(() =>
+      page
+        .locator(".wall .card")
+        .first()
+        .evaluate((card) => (card as HTMLElement).style.transform),
+    )
+    .toBe(geometry.transform);
+  await page.getByRole("button", { name: "Grid view", exact: true }).click();
+  await expect(page.locator("#qaControls")).toBeHidden();
+  await page.getByRole("button", { name: "SWIPE view", exact: true }).click();
+  await expect(page.locator("#qaPanel")).toBeVisible();
+});

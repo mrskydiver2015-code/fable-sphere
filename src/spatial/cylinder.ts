@@ -1,6 +1,11 @@
 /** Reference SWIPE QA tuning. Positions are CSS pixels, time is milliseconds. */
 export const CYLINDER = Object.freeze({
   curve: 32,
+  rows: 4,
+  columns: 6,
+  cardWidth: 178,
+  cardHeight: 128,
+  gap: 8,
   perspective: 1100,
   projectionMs: 300,
   springK: 20 / 100_000,
@@ -10,10 +15,14 @@ export const CYLINDER = Object.freeze({
 });
 
 /** Unroll horizontal travel onto the inside wall; the centre recedes from us. */
-export function projectCylinder(x: number, viewportWidth: number) {
+export function projectCylinder(
+  x: number,
+  viewportWidth: number,
+  curve: number = CYLINDER.curve,
+) {
   const half = Math.max(1, viewportWidth / 2);
-  // Matches the reference calibration: a 756px viewport has R=448.875px.
-  const radius = half * (38 / CYLINDER.curve);
+  // Six 178px cards + five 8px gaps give R=657.875px at the QA width.
+  const radius = half * (38 / Math.max(6, curve));
   const edgeAngle = Math.asin(Math.min(1, half / radius));
   const theta = Math.max(-1.35, Math.min(1.35, x / radius));
   const edgeSag = 1 - Math.cos(edgeAngle);

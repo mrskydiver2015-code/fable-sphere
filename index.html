@@ -128,6 +128,37 @@
               aria-label="Next gallery column"
             ></button>
           </div>
+          <div class="qa-controls" id="qaControls">
+            <button
+              class="btn"
+              id="qaToggle"
+              aria-expanded="false"
+              aria-controls="qaPanel"
+            >
+              QA
+            </button>
+            <section
+              class="qa-panel"
+              id="qaPanel"
+              aria-label="Cylinder QA"
+              hidden
+            >
+              <strong>SWIPE QA · Cylinder</strong>
+              <label for="qaCurve"
+                >Curve
+                <input
+                  id="qaCurve"
+                  type="range"
+                  min="6"
+                  max="50"
+                  step="1"
+                  value="32"
+                /><output id="qaCurveValue" for="qaCurve">32°</output></label
+              >
+              <p id="qaMetrics"></p>
+              <button class="btn" id="qaReset">Reset calibration</button>
+            </section>
+          </div>
           <span class="footer-hint" id="footerHint"
             >Drag to explore <span style="padding: 0 6px">·</span> Open
             something wonderful</span

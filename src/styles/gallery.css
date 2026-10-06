@@ -154,6 +154,8 @@
   height: 14px;
 }
 .spatial {
+  max-width: 1108px;
+  margin-inline: auto;
   overflow: hidden;
   padding: 0;
   perspective: 1100px;
@@ -425,4 +427,93 @@
   padding: 100px;
   text-align: center;
   color: var(--muted);
+}
+
+.card-category {
+  display: block;
+  flex: none;
+  width: 100%;
+  padding: 3px 8px;
+  background: var(--category-color);
+  color: white;
+  font-size: 10px;
+  line-height: 16px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px #0009;
+}
+.spatial .card {
+  border-radius: 9px;
+}
+.spatial .card-caption {
+  height: 38px;
+  padding: 4px 7px;
+}
+.spatial .card-title {
+  font-size: 13px;
+}
+.spatial .card-meta {
+  font-size: 8px;
+  margin-top: 2px;
+}
+.spatial .card-info {
+  bottom: 12px;
+  right: 4px;
+}
+.spatial .card-category ~ .card-art .art-label {
+  display: none;
+}
+.spatial.compact-wall .card-category {
+  font-size: 9px;
+  padding-block: 1px;
+}
+.qa-controls {
+  position: relative;
+}
+.qa-panel {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  width: min(300px, calc(100vw - 36px));
+  max-height: 65dvh;
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 8px 30px #0008;
+  z-index: 10;
+  font-size: 12px;
+}
+.qa-panel label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block: 10px;
+}
+.qa-panel input {
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+}
+.qa-panel output {
+  white-space: nowrap;
+  color: var(--accent);
+}
+.qa-panel p {
+  font: 11px/1.7 monospace;
+  margin-bottom: 10px;
+}
+@media (max-width: 540px) {
+  .footer {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .footer-left {
+    flex: 1 0 100%;
+  }
+  .spatial-controls {
+    flex: 1;
+  }
 }

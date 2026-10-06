@@ -46,7 +46,7 @@ fs.mkdirSync(out, { recursive: true });
   try {
     await page.goto(origin);
     await waitReady();
-    assert.equal(await page.locator("[data-card]").count(), 6);
+    assert.equal(await page.locator("[data-card]").count(), 159);
     await page.screenshot({ path: out + "/desktop.png" });
     await page
       .getByRole("button", { name: "Open Chronicles", exact: true })
@@ -182,17 +182,12 @@ fs.mkdirSync(out, { recursive: true });
     );
     await page.locator("#demoToggle").click();
     await waitReady();
-    assert.equal(await page.locator("[data-card]").count(), 6);
+    assert.equal(await page.locator("[data-card]").count(), 159);
     await page.getByRole("button", { name: "SWIPE view", exact: true }).click();
     await page.screenshot({ path: out + "/mobile.png" });
     assert.equal(
       await page.evaluate(() => document.body.scrollWidth <= innerWidth),
       true,
-    );
-    // Search across the demo so there are offscreen columns in the multi-row wall.
-    await page.locator("#searchInput").fill("e");
-    await page.waitForFunction(
-      () => document.querySelectorAll("[data-card]").length > 12,
     );
     // Offscreen cards cannot receive focus; Home/End expose their keyboard target.
     await page
@@ -251,7 +246,7 @@ fs.mkdirSync(out, { recursive: true });
     };
     assert.equal(remaining.entries, 0);
     assert.equal(remaining.files, 0);
-    assert.equal(remaining.demo, 24);
+    assert.equal(remaining.demo, 177);
     // Atomic failure: failed save creates no phantom folder, keeps dialog editable.
     await page.evaluate(() => {
       window.originalPut = IDBObjectStore.prototype.put;

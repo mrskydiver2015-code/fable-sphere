@@ -1,3 +1,4 @@
+import { makeMatrixDemo } from "./matrixDemo";
 import type { LibraryEntry } from "../core/types";
 import { keyFor } from "../core/storage";
 export function makeDemo(): LibraryEntry[] {
@@ -149,5 +150,5 @@ export function makeDemo(): LibraryEntry[] {
       { type: "Text", text, mime: "text/plain" },
     ),
   );
-  return result;
+  return [...result, ...makeMatrixDemo(now)];
 }

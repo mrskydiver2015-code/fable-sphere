@@ -1,4 +1,5 @@
 import { storage, keyFor } from "./storage";
+import { makeMatrixDemo } from "../data/matrixDemo";
 import { makeDemo } from "../data/demo";
 import type { LibraryEntry } from "./types";
 const record = (value: unknown): value is Record<string, unknown> =>
@@ -77,7 +78,28 @@ export async function initializeData(): Promise<{
   migrated: number;
   warning?: string;
 }> {
-  if (await storage.read("meta", "initialized-v2")) return { migrated: 0 };
+  if (await storage.read("meta", "initialized-v2")) {
+    if (!(await storage.read("meta", "matrix-demo-v1"))) {
+      const existing = await storage.read("entries");
+      const keys = new Set(existing.map((entry) => entry.key));
+      // Add to the shipped demo only. Preserve edited records and custom demo spaces.
+      const shippedDemo = [
+        "chronicles",
+        "visual",
+        "places",
+        "cosmos",
+        "fieldnotes",
+        "inspiration",
+      ].every((id) => keys.has(keyFor(id, "demo")));
+      await storage.commit({
+        put: shippedDemo
+          ? makeMatrixDemo().filter((entry) => !keys.has(entry.key))
+          : [],
+        meta: [{ key: "matrix-demo-v1", value: true }],
+      });
+    }
+    return { migrated: 0 };
+  }
   const put = makeDemo();
   let migrated = 0,
     warning: string | undefined;
@@ -92,6 +114,12 @@ export async function initializeData(): Promise<{
     warning =
       "The previous library could not be migrated. Its original localStorage data has been left untouched.";
   }
-  await storage.commit({ put, meta: [{ key: "initialized-v2", value: true }] });
+  await storage.commit({
+    put,
+    meta: [
+      { key: "initialized-v2", value: true },
+      { key: "matrix-demo-v1", value: true },
+    ],
+  });
   return { migrated, warning };
 }
