@@ -1,10 +1,43 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import {
   CYLINDER,
   projectCylinder,
   projectedColumn,
   springStep,
 } from "../src/spatial/cylinder";
+
+/** A populated library exercises multiple full columns without duplicating UI cards. */
+async function populateWall(page: Page, count = 120) {
+  await page.evaluate(async (count) => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("fable-sphere-library", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction("entries", "readwrite");
+      const store = tx.objectStore("entries");
+      for (let i = 0; i < count; i++)
+        store.put({
+          key: `demo:wall-${i}`,
+          id: `wall-${i}`,
+          space: "demo",
+          parentId: null,
+          kind: "folder",
+          name: `Wall ${i}`,
+          seed: i % 6,
+          art: "landscape",
+          created: i,
+          updated: i,
+        });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  }, count);
+  await page.reload();
+  await expect(page.locator("#demoToggle")).toBeEnabled();
+}
 
 test("reference radius, concavity and momentum are preserved", () => {
   const center = projectCylinder(0, 756),
@@ -49,22 +82,26 @@ test("rendered SWIPE bends inward, stays clickable and leaves controls flat", as
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.goto("/");
   await expect(page.locator("#demoToggle")).toBeEnabled();
+  await populateWall(page);
   const geometry = await page.locator(".wall .card").evaluateAll((cards) =>
     cards.map((card) => {
       const m = new DOMMatrix(getComputedStyle(card).transform);
       return {
+        top: (card as HTMLElement).style.top,
         x: m.m41,
         z: m.m43,
         rotation: (Math.atan2(m.m13, m.m11) * 180) / Math.PI,
       };
     }),
   );
-  // Column-major layout: two rows per column at this viewport height.
-  const left = geometry[0],
-    center = geometry[2],
-    right = geometry[4];
-  expect(left.z).toBeGreaterThan(center.z + 50);
-  expect(right.z).toBeGreaterThan(center.z + 50);
+  const rows = new Set(geometry.map((card) => card.top)).size;
+  expect(rows).toBe(3);
+  const columns = geometry.filter((_, i) => i % rows === 0).slice(0, 4);
+  const left = columns[0],
+    right = columns[columns.length - 1];
+  const center = columns[Math.floor(columns.length / 2)];
+  expect(left.z).toBeGreaterThan(center.z + 40);
+  expect(right.z).toBeGreaterThan(center.z + 40);
   expect(Math.abs(left.rotation)).toBeGreaterThan(25);
   expect(Math.abs(right.rotation)).toBeGreaterThan(25);
   expect(left.rotation * right.rotation).toBeLessThan(0);
@@ -99,6 +136,7 @@ test("drag rotates cards along the arc and responsive resizing keeps them reacha
   await page.setViewportSize({ width: 1100, height: 780 });
   await page.goto("/");
   await expect(page.locator("#demoToggle")).toBeEnabled();
+  await populateWall(page);
   const card = page.locator(".wall .card").first();
   const box = (await card.boundingBox())!;
   const before = await card.evaluate((node) => {
@@ -133,3 +171,73 @@ test("drag rotates cards along the arc and responsive resizing keeps them reacha
   await page.keyboard.press("Enter");
   await expect(page.locator("h1")).not.toHaveText("A world of your own.");
 });
+
+for (const size of [
+  { width: 1440, height: 1080, rows: 4 },
+  { width: 1366, height: 768, rows: 3 },
+  { width: 390, height: 844, rows: 3 },
+  { width: 320, height: 568, rows: 3 },
+  { width: 844, height: 390, rows: 3 },
+]) {
+  test(`wall fills ${size.width}×${size.height} without page scrolling`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize(size);
+    await page.goto("/");
+    await expect(page.locator("#demoToggle")).toBeEnabled();
+    await populateWall(page);
+    const assertViewport = async () => {
+      const layout = await page.evaluate(() => {
+        const viewport = document
+          .querySelector(".spatial")!
+          .getBoundingClientRect();
+        const cards = [
+          ...document.querySelectorAll<HTMLElement>(
+            '.wall .card[aria-hidden="false"]',
+          ),
+        ];
+        return {
+          height: document.documentElement.scrollHeight,
+          width: document.documentElement.scrollWidth,
+          rows: new Set(cards.map((card) => card.style.top)).size,
+          inside: cards.every((card) => {
+            const r = card.getBoundingClientRect();
+            return r.top >= viewport.top && r.bottom <= viewport.bottom;
+          }),
+          visibleCount: cards.length,
+        };
+      });
+      expect(layout.height).toBe(size.height);
+      expect(layout.width).toBe(size.width);
+      expect(layout.rows).toBe(size.rows);
+      expect(layout.inside).toBe(true);
+      expect(layout.visibleCount).toBeLessThan(40);
+    };
+    await assertViewport();
+    await page.screenshot({ path: testInfo.outputPath("wall.png") });
+    await page
+      .locator('.wall .card[aria-hidden="false"] .card-info')
+      .first()
+      .click();
+    if (size.width > 850) {
+      await expect(page.locator("#inspector")).toBeVisible();
+      await assertViewport();
+      await page.locator("#inspector [data-close-details]").click();
+    } else {
+      await expect(page.locator("#dialog")).toBeVisible();
+      await page.keyboard.press("Escape");
+    }
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page
+      .locator('.wall .card[aria-hidden="false"] .card-open')
+      .first()
+      .focus();
+    await page.keyboard.press("End");
+    await expect(
+      page.locator(".card-open:focus").locator(".."),
+    ).toHaveAttribute("aria-hidden", "false");
+    await assertViewport();
+    await page.keyboard.press("Home");
+    await expect(page.locator("#prevBtn")).toBeDisabled();
+  });
+}

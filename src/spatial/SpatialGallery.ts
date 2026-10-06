@@ -21,6 +21,8 @@ export class SpatialGallery {
   cw = 0;
   ch = 0;
   offset = 0;
+  width = 0;
+  private visibleCards = new Set<number>();
   wall: HTMLElement | null = null;
   cards: HTMLElement[] = [];
   list: LibraryEntry[] = [];
@@ -61,12 +63,18 @@ export class SpatialGallery {
     clearTimeout(this.wheelTimer);
     this.drag = null;
     this.wall = null;
+    this.visibleCards.clear();
   }
   mount(list: LibraryEntry[]) {
     this.list = list;
 
     this.wall = this.viewport.querySelector<HTMLElement>(".wall")!;
     this.cards = [...this.wall.querySelectorAll<HTMLElement>(".card")];
+    this.cards.forEach((card) => {
+      card.style.visibility = "hidden";
+      card.inert = true;
+      card.setAttribute("aria-hidden", "true");
+    });
     this.abort = new AbortController();
     const options = { signal: this.abort.signal };
     this.viewport.style.perspective = `${CYLINDER.perspective}px`;
@@ -79,6 +87,7 @@ export class SpatialGallery {
       "pointerdown",
       (e) => {
         if (
+          this.drag !== null ||
           e.button !== 0 ||
           (e.target instanceof Element && e.target.closest(".card-info"))
         )
@@ -131,7 +140,7 @@ export class SpatialGallery {
             : 0;
         d.x = e.clientX;
         d.time = now;
-        this.apply();
+        this.queueApply();
       },
       options,
     );
@@ -181,7 +190,7 @@ export class SpatialGallery {
           0,
           Math.min(this.max * this.stride, this.pos + value),
         );
-        this.apply();
+        this.queueApply();
         clearTimeout(this.wheelTimer);
         this.wheelTimer = setTimeout(() => {
           this.velocity = 0;
@@ -197,20 +206,22 @@ export class SpatialGallery {
     this.raf = 0;
     const w = this.viewport.clientWidth,
       h = this.viewport.clientHeight;
-    this.rows = h >= 510 ? 2 : 1;
+    this.width = w;
+    // Keep a wall at laptop/mobile heights, without inventing duplicate entries.
+    this.rows = Math.min(this.cards.length, h >= 620 ? 4 : 3);
+    this.gap = w < 540 ? 10 : 14;
+    this.ch = Math.max(1, (h - 24 - (this.rows - 1) * this.gap) / this.rows);
+    const preferredWidth = Math.max(110, Math.min(260, this.ch * 1.45));
     this.cols = Math.max(
       1,
       Math.min(
-        5,
         Math.ceil(this.cards.length / this.rows),
-        Math.floor((w - 30) / 230),
+        Math.floor((w - 24 + this.gap) / (preferredWidth + this.gap)),
       ),
     );
-    this.gap = w < 540 ? 18 : 24;
-    this.cw = Math.min(420, (w - (this.cols + 1) * this.gap) / this.cols);
+    this.cw = Math.min(360, (w - 24 - (this.cols - 1) * this.gap) / this.cols);
     this.offset = (w - (this.cols * this.cw + (this.cols - 1) * this.gap)) / 2;
-    this.ch = Math.min(370, (h - 36 - (this.rows - 1) * this.gap) / this.rows);
-    this.ch = Math.max(160, this.ch);
+    this.viewport.classList.toggle("compact-wall", this.ch < 120);
     this.stride = this.cw + this.gap;
     this.max = Math.max(
       0,
@@ -232,26 +243,55 @@ export class SpatialGallery {
     });
     this.apply();
   }
+  private queueApply() {
+    if (this.raf) return;
+    this.raf = requestAnimationFrame(() => {
+      this.raf = 0;
+      this.apply();
+    });
+  }
   apply() {
     if (!this.wall) return;
-    const w = this.viewport.clientWidth,
+    const w = this.width,
       half = w / 2;
-    this.cards.forEach((card, i) => {
-      const col = Math.floor(i / this.rows),
-        left = this.offset + col * this.stride - this.pos,
-        x = left + this.cw / 2 - half;
-      const projection = projectCylinder(x, w);
-      card.style.transform = `translate3d(${half + projection.x - this.cw / 2}px,0,${projection.z}px) rotateY(${projection.rotation}deg)`;
-      // Cull by the unrolled position too: clamped far-away columns must not pile up.
-      const visible =
-        left + this.cw > -this.stride &&
-        left < w + this.stride &&
-        projection.opacity > 0;
-      const interactive = visible && projection.opacity === 1;
-      card.style.opacity = visible ? String(projection.opacity) : "0";
-      card.inert = !interactive;
-      card.setAttribute("aria-hidden", String(!interactive));
-    });
+    const visibleCards = new Set<number>();
+    // Visit only the viewport plus one column of overscan, independent of library size.
+    const first = Math.max(
+      0,
+      Math.floor((this.pos - this.offset) / this.stride) - 1,
+    );
+    const last = Math.min(
+      Math.ceil(this.cards.length / this.rows) - 1,
+      Math.ceil((this.pos + w - this.offset) / this.stride),
+    );
+    for (let col = first; col <= last; col++) {
+      const left = this.offset + col * this.stride - this.pos;
+      const projection = projectCylinder(left + this.cw / 2 - half, w);
+      if (projection.opacity <= 0) continue;
+      const transform = `translate3d(${half + projection.x - this.cw / 2}px,0,${projection.z}px) rotateY(${projection.rotation}deg)`;
+      const interactive = projection.opacity === 1;
+      for (let row = 0; row < this.rows; row++) {
+        const i = col * this.rows + row,
+          card = this.cards[i];
+        if (!card) break;
+        visibleCards.add(i);
+        card.style.visibility = "visible";
+        card.style.transform = transform;
+        card.style.opacity = String(projection.opacity);
+        if (card.inert === interactive) {
+          card.inert = !interactive;
+          card.setAttribute("aria-hidden", String(!interactive));
+        }
+      }
+    }
+    for (const i of this.visibleCards) {
+      if (visibleCards.has(i)) continue;
+      const card = this.cards[i];
+      card.style.visibility = "hidden";
+      card.inert = true;
+      card.setAttribute("aria-hidden", "true");
+    }
+    this.visibleCards = visibleCards;
     this.controls.previous.disabled = this.pos < 1;
     this.controls.next.disabled = this.pos >= this.max * this.stride - 1;
     this.controls.progress.style.width =

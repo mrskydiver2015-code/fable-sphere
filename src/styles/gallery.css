@@ -157,8 +157,9 @@
   overflow: hidden;
   padding: 0;
   perspective: 1100px;
-  perspective-origin: 50% 45%;
-  touch-action: pan-y;
+  perspective-origin: 50% 50%;
+  touch-action: none;
+  user-select: none;
 }
 .spatial .wall {
   position: absolute;
@@ -174,7 +175,7 @@
 .spatial .card {
   pointer-events: auto;
   position: absolute;
-  will-change: transform;
+  contain: layout style;
   transition: border-color 0.15s;
   backface-visibility: hidden;
 }
@@ -182,10 +183,36 @@
   min-height: 0;
 }
 .spatial .card-caption {
-  height: 78px;
+  height: 52px;
+  padding: 7px 10px;
+}
+.spatial .card-meta {
+  margin-top: 3px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.spatial .card-info {
+  bottom: 24px;
+  right: 6px;
+}
+.spatial.compact-wall .card-caption {
+  height: 30px;
+  padding: 5px 8px;
+}
+.spatial.compact-wall .card-meta,
+.spatial.compact-wall .art-label,
+.spatial.compact-wall .folder-stack {
+  display: none;
+}
+.spatial.compact-wall .card-info {
+  bottom: 3px;
+}
+.spatial.compact-wall .card-title {
+  font-size: 14px;
 }
 .spatial .card-title {
-  font-size: 19px;
+  font-size: 16px;
 }
 .spatial .card:hover .card-art img {
   transform: scale(1.025);

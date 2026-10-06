@@ -91,9 +91,6 @@
   }
 }
 @media (max-width: 540px) {
-  .app {
-    min-height: 480px;
-  }
   .topbar,
   .toolbar,
   .footer {
@@ -237,5 +234,79 @@
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Preserve gallery space on laptops and landscape phones; panels scroll internally. */
+@media (max-height: 800px) {
+  .topbar {
+    height: 54px;
+  }
+  .page-head {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .breadcrumbs {
+    margin-bottom: 5px;
+  }
+  .eyebrow {
+    display: none;
+  }
+  h1 {
+    font-size: 28px;
+  }
+  .description {
+    margin-top: 4px;
+  }
+  .toolbar {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .footer {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+@media (max-height: 600px) {
+  .topbar {
+    height: 44px;
+  }
+  .page-head {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  .breadcrumbs,
+  .description {
+    display: none;
+  }
+  .heading-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  h1 {
+    font-size: 22px;
+  }
+  .head-actions {
+    width: auto;
+  }
+  .head-actions .btn {
+    padding: 6px;
+    font-size: 10px;
+  }
+  .toolbar {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  .sidebar {
+    padding-top: 12px;
+    padding-bottom: 10px;
+  }
+  .brand {
+    padding-bottom: 12px;
+  }
+  .sidebar-foot {
+    padding-top: 8px;
+    margin-top: 8px;
   }
 }

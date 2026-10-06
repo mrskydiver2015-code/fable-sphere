@@ -23,17 +23,23 @@ fs.mkdirSync(out, { recursive: true });
     await p.waitForFunction(
       () => !document.querySelector("#demoToggle").disabled,
     );
+    // A populated wall must have offscreen columns even with three visible rows.
+    await p.locator("#searchInput").fill("e");
+    await p.waitForFunction(
+      () => document.querySelectorAll("[data-card]").length > 12,
+    );
+    const titleBeforeDrag = await p.locator("h1").innerText();
     // Mouse drag moves wall and does not accidentally enter a folder.
     const box = await p
       .locator("[data-card]:not([aria-hidden=true])")
       .first()
       .boundingBox();
-    await p.mouse.move(box.x + box.width * 0.8, box.y + 100);
+    await p.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.4);
     await p.mouse.down();
-    await p.mouse.move(box.x + 20, box.y + 100, { steps: 12 });
+    await p.mouse.move(box.x + 20, box.y + box.height * 0.4, { steps: 12 });
     await p.mouse.up();
     await waitForSettled(p);
-    assert.equal(await p.locator("h1").innerText(), "A world of your own.");
+    assert.equal(await p.locator("h1").innerText(), titleBeforeDrag);
     assert.ok(await p.locator("#prevBtn").isEnabled());
     await p
       .locator("[data-card]:not([aria-hidden=true]) .card-info")
@@ -123,9 +129,14 @@ fs.mkdirSync(out, { recursive: true });
     await t.waitForFunction(
       () => !document.querySelector("#demoToggle").disabled,
     );
+    await t.locator("#searchInput").fill("e");
+    await t.waitForFunction(
+      () => document.querySelectorAll("[data-card]").length > 12,
+    );
+    const touchTitle = await t.locator("h1").innerText();
     const client = await touch.newCDPSession(t);
     const r = await t.locator("[data-card]").first().boundingBox();
-    const y = r.y + 100;
+    const y = r.y + r.height * 0.4;
     await client.send("Input.dispatchTouchEvent", {
       type: "touchStart",
       touchPoints: [{ x: 320, y }],
@@ -141,7 +152,7 @@ fs.mkdirSync(out, { recursive: true });
     });
     await waitForSettled(t);
     assert.ok(await t.locator("#prevBtn").isEnabled());
-    assert.equal(await t.locator("h1").innerText(), "A world of your own.");
+    assert.equal(await t.locator("h1").innerText(), touchTitle);
     await touch.close();
     // Storage rejection is surfaced and does not generate a pretend demo library.
     const blocked = await browser.newContext();

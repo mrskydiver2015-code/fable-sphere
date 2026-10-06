@@ -189,6 +189,11 @@ fs.mkdirSync(out, { recursive: true });
       await page.evaluate(() => document.body.scrollWidth <= innerWidth),
       true,
     );
+    // Search across the demo so there are offscreen columns in the multi-row wall.
+    await page.locator("#searchInput").fill("e");
+    await page.waitForFunction(
+      () => document.querySelectorAll("[data-card]").length > 12,
+    );
     // Offscreen cards cannot receive focus; Home/End expose their keyboard target.
     await page
       .locator('[data-card]:not([aria-hidden="true"]) .card-open')
